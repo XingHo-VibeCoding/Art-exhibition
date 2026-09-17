@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Art Exhibition</title>
+<meta name="description" content="Art Exhibition — 作品集 · 建设中">
+<!-- 内联 SVG 图标：不引入任何外部资源，断网也能正常显示 -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23FAF8F4'/%3E%3Crect x='3' y='6.5' width='10' height='3' fill='%23C8442E'/%3E%3C/svg%3E">
+<style>
+  /* 60-30-10 配色：纸白底 60% / 墨黑字 30% / 朱砂点 10% */
+  :root{
+    --paper:#FAF8F4;
+    --ink:#1C1B19;
+    --seal:#C8442E;
+    --muted:#6B6862;
+    --faint:#8C8981;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    /* 只用系统自带的字体，不加载网络字体——保证断网可用、秒开 */
+    font-family:"Helvetica Neue",Helvetica,Arial,"Segoe UI",system-ui,sans-serif;
+  }
+  ::selection{background:var(--seal);color:var(--paper)}
+
+  .sheet{
+    min-height:100vh;
+    min-height:100dvh;
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;  /* 标题顶天、编号立地，留白交给中间 */
+    padding:clamp(32px,7vw,88px) clamp(24px,8vw,96px) clamp(26px,5vw,56px);
+  }
+
+  /* 瑞士国际主义：字号本身就是图形，不做任何装饰 */
+  .title{
+    position:relative;
+    display:inline-block;
+    font-size:clamp(38px,11vw,104px);
+    line-height:1.05;
+    letter-spacing:-0.02em;
+    font-weight:700;
+  }
+  /* 唯一“新”的一笔：一层极淡的朱砂错影，呼应丝网印刷的错版 */
+  .title .ghost{
+    position:absolute;
+    left:2px;
+    top:3px;
+    color:var(--seal);
+    opacity:.34;
+  }
+  .title .solid{position:relative;color:var(--ink)}
+
+  /* 朱砂短线是“手段”：把视线从标题引向状态说明 */
+  .rule{width:58px;height:2px;background:var(--seal);margin-top:clamp(20px,3vw,34px)}
+
+  .sub{
+    margin-top:clamp(18px,3vw,28px);
+    font-size:clamp(13px,1.5vw,15px);
+    letter-spacing:.06em;
+    color:var(--muted);
+  }
+
+  .foot{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    font-size:12px;
+    letter-spacing:.16em;
+    color:var(--faint);
+  }
+  .foot .no{color:var(--seal)}
+</style>
+</head>
+<body>
+  <main class="sheet">
+    <header>
+      <h1 class="title">
+        <span class="ghost" aria-hidden="true">ART<br>EXHIBITION</span>
+        <span class="solid">ART<br>EXHIBITION</span>
+      </h1>
+      <div class="rule"></div>
+      <p class="sub">作品集 · 建设中</p>
+    </header>
+
+    <footer class="foot">
+      <span>2026</span>
+      <span class="no">No. 000</span>
+    </footer>
+  </main>
+</body>
+</html>
