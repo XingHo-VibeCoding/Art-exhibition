@@ -17,6 +17,9 @@ node_modules/
 .DS_Store
 Thumbs.db
 
+# 研究取证截图（Day 3 临时证据，只作本地比对，不进仓库）
+_ref/
+
 # 日志与凭据
 *.log
 *.key
