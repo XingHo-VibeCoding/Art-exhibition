@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ART EXHIBITION</title>
+<meta name="description" content="Art Exhibition">
+<!-- 页签图标：内联 SVG，零外部请求 -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E7E1D6'/%3E%3Crect x='4.5' y='2.5' width='7' height='11' fill='none' stroke='%23232019' stroke-width='1'/%3E%3C/svg%3E">
+<style>
+/* ============================================================================
+   Art Exhibition · MVP / S1 展示系统 v5
+   ----------------------------------------------------------------------------
+   技术：纯 HTML + CSS + 原生 JS，零外部依赖、零构建（TECH_DESIGN §2）
+   展示：展陈骨架（恒定）+ 环境随作品（变量）+ 语法（方言）—— DESIGN_V5 §4
+
+   ★ 本步只做「恒定层 · 展陈骨架」，以及把容器从「自带材质」拉回「中性」：
+     · 去掉了 v4 全站强制的印刷物证：网点底 / 十字规矩线 / 金属专版 / 六套主题色
+     · 装裱改为：2:3 外框 + 卡纸（外框短边的 6%）+ 作品零裁切完整放入
+     · 铭牌回到【卡片内部】，三级字号（作品名 > 系列 > 编号），居中对齐
+     · 无作品的展位 = 空装裱（保留策展位，不假装有作品）
+
+   ★ 第 3 步（本步）：显影语法换成「刷子刷出」（DESIGN_V5 §3 // D6）——
+     原「错版对位」的位移重影整体退场，改为【分段错峰遮蔽】：
+     颜色从头到尾都是对的，观众看到的只是「位置还没到」。环境色随作品仍是第 4 步。
+     节拍骨架 M0–M4 与四条工序曲线全部沿用（PRD §6.5）。
+   ========================================================================== */
+
+/* ---------- 1 · 展陈令牌 ---------- */
+
+/* 展陈三层：墙 / 卡纸 / 墨。第 4 步将由作品取色生成（DESIGN_V5 §4.2）；
+   在此之前给一组中性值，让骨架先站住。 */
+:root{
+  --wall:      #E7E1D6;                  /* 墙：中性米灰，不抢作品 */
+  --wall-deep: #DCD5C7;                  /* 墙的暗侧：聚焦遮罩 */
+  --mat:       #F7F4EE;                  /* 卡纸：比墙亮一档，把作品托起来 */
+  --ink:       #232019;                  /* 墨：文字与极少的线 */
+  --ink-2:     #555046;                  /* 第二墨：揭幕的第二道色块 */
+  --ink-soft:  rgba(35,32,25,.56);
+  --ink-faint: rgba(35,32,25,.32);
+
+  /* 装裱：卡纸宽度 = 外框【短边】的 6%（DESIGN_V5 §4.1）
+     —— CSS 的 padding 百分比正是按【宽度】计算的，所以这一条天生对齐 */
+  --mat-pad: 6%;
+
+  /* 四条来自工序的曲线（PRD §6.5.4）——保留节拍骨架，名字改材质中性。
+     全站禁用 ease / ease-in-out / 弹簧（AC-60）。 */
+  --c-squeegee: cubic-bezier(0, 0, 1, 1);              /* 匀速：走位与显影 */
+  --c-press:    cubic-bezier(0.08, 0.92, 0.14, 1);     /* 快起急停，不回弹 */
+  --c-register: cubic-bezier(0.34, 1.42, 0.52, 1);     /* 过冲后回正，只回一次 */
+  --c-lift:     cubic-bezier(0.62, 0, 0.86, 0.22);     /* 慢起、快走 */
+
+  /* 三条主线的时长（PRD §6.5.5 / AC-65） */
+  --t-unveil: 1200ms;
+  --t-theme:  600ms;
+  --t-swap:   420ms;
+}
+
+/* ---------- 2 · 基础 ---------- */
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+html{scroll-behavior:smooth}
+
+body{
+  background:var(--wall);
+  color:var(--ink);
+  /* 系统字体栈：不加载网络字体 → 断网可用、零延迟（TD-6） */
+  font-family:"Helvetica Neue",Helvetica,Arial,"Segoe UI",system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+::selection{background:var(--ink);color:var(--wall)}
+
+/* ---------- 3 · 墙层（恒定，全程零位移） ---------- */
+
+/* 墙不是背景色，是一面墙。它铺极淡的颗粒，且【全程不动】——
+   因为 60-30-10 说的是：占了 60% 的东西，不许动（PRD §6.5.1） */
+.wall{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background-color:var(--wall);
+}
+.wall::after{
+  /* 墙面颗粒：极淡的一层噪点，用 SVG 滤镜生成，零外部请求。
+     注意：这不是网点（网点是印刷物证，已随容器一起降级），只是让墙面有颗粒感。 */
+  content:"";
+  position:absolute; inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)' opacity='0.5'/%3E%3C/svg%3E");
+  opacity:.10;
+  mix-blend-mode:multiply;
+}
+
+/* ---------- 4 · 揭幕（F-01） ---------- */
+
+/* 节拍：720ms 走位(60%) → 120ms 高光(10%) → 360ms 收束(30%)（PRD §6.5.5） */
+.unveil{
+  position:fixed; inset:0; z-index:60;
+  display:grid; place-items:center;
+  background:var(--wall);
+  transition:opacity 120ms var(--c-press);
+}
+.unveil.done{opacity:0; pointer-events:none}
+
+/* 幕布：两道错位色块，从上下向中线合拢。画面上只能有色块 / 字标 / 细线三样（AC-02） */
+.unveil-press{
+  position:absolute; inset:0; display:flex; flex-direction:column;
+}
+.curtain{
+  flex:1; position:relative; overflow:hidden;
+  background:var(--wall);
+}
+.curtain i{
+  position:absolute; left:0; right:0; height:100%;
+  display:block;
+}
+/* 上幕：主墨 60% */
+.curtain.top i{ top:0; background:var(--ink) }
+/* 下幕：第二墨 30%，整块向左偏 3px —— 两道版没对准的痕（形，不是装饰） */
+.curtain.bottom i{ top:0; background:var(--ink-2); transform:translateX(-3px) }
+
+.curtain.top  { animation:shutTop var(--t-unveil) var(--c-squeegee) both }
+.curtain.bottom{ animation:shutBot var(--t-unveil) var(--c-squeegee) both }
+
+/* 走位 720ms 走到中线；高光 120ms 压死；余下 360ms 静止（收束交给字标与展场） */
+@keyframes shutTop{
+  0%   { transform:translateY(-50%) }
+  60%  { transform:translateY(0) }      /* ← 720ms：合拢 */
+  70%  { transform:translateY(2px) }    /* ← 840ms：压印下沉，全场唯一的高光 */
+  100% { transform:translateY(2px) }
+}
+@keyframes shutBot{
+  0%   { transform:translateY(50%) }
+  60%  { transform:translateY(0) }
+  70%  { transform:translateY(-2px) }
+  100% { transform:translateY(-2px) }
+}
+
+/* 字标：从两块的缝隙里「压印」显影 —— 快起急停，无回弹（AC-62） */
+.unveil-mark{
+  position:relative; z-index:2;
+  text-align:center;
+  animation:markPress var(--t-unveil) linear both;
+}
+.unveil-mark b{
+  display:block;
+  font-size:clamp(20px,4.4vw,40px);
+  font-weight:700; letter-spacing:.30em;
+  color:var(--wall);
+  text-indent:.30em;                   /* 抵消末字的字距，视觉居中 */
+  mix-blend-mode:difference;           /* 骑在两道墨上，都能读清 */
+}
+@keyframes markPress{
+  0%,59%   { opacity:0; transform:scaleY(.06) translateY(6px); filter:blur(3px) }
+  60%      { opacity:1; transform:scaleY(1)   translateY(0);   filter:blur(0) }  /* 720ms 显影 */
+  70%      { opacity:1; transform:scaleY(1)   translateY(0) }
+  100%     { opacity:1; transform:scaleY(1)   translateY(0) }
+}
+
+.unveil-line{
+  position:absolute; left:50%; top:50%;
+  width:min(320px,54vw); height:1px;
+  background:var(--wall); opacity:.55;
+  transform:translate(-50%,-50%) scaleX(0);
+  mix-blend-mode:difference;
+  animation:lineDraw var(--t-unveil) linear both;
+}
+@keyframes lineDraw{
+  0%,59%   { transform:translate(-50%,-50%) scaleX(0) }
+  60%      { transform:translate(-50%,-50%) scaleX(1) }
+  100%     { transform:translate(-50%,-50%) scaleX(1) }
+}
+
+/* 跳过：任意点击 / 按键 / 滚动 → 立即终态，不播残余动画（AC-04 / AC-71） */
+.unveil.skip .curtain,
+.unveil.skip .unveil-mark,
+.unveil.skip .unveil-line{ animation:none !important }
+
+/* ---------- 5 · 展场（F-04） ---------- */
+
+.floor{ position:relative; z-index:2 }
+
+/* 顶部常驻：站名 + 主题导航（= 一级导航，唯一入口 — DESIGN_V5 §2.1） */
+.topbar{
+  position:fixed; top:0; left:0; right:0; z-index:20;
+  display:flex; align-items:center; justify-content:space-between; gap:24px;
+  padding:22px clamp(24px,6vw,96px);
+  background:transparent;
+  transition:background 240ms var(--c-press), box-shadow 240ms var(--c-press);
+}
+.topbar.stuck{
+  background:color-mix(in srgb, var(--wall) 88%, transparent);
+  backdrop-filter:blur(6px);
+  box-shadow:0 1px 0 rgba(35,32,25,.07);
+}
+
+.wordmark{
+  font-size:15px; font-weight:700; letter-spacing:.22em;
+  color:var(--ink); text-decoration:none; white-space:nowrap;
+}
+
+.series{
+  display:flex; gap:clamp(12px,2.2vw,30px); list-style:none;
+}
+.series button{
+  position:relative; border:0; background:none; cursor:pointer;
+  padding:4px 0 6px;
+  font:inherit; font-size:12px; font-weight:500; letter-spacing:.16em;
+  color:color-mix(in srgb, var(--ink) 46%, transparent);
+  transition:color 200ms var(--c-press);
+}
+.series button:hover{ color:var(--ink) }
+/* 激活态：一道墨色下划线。金属已随容器降级，皮相只留墨。 */
+.series button[aria-selected="true"]{ color:var(--ink) }
+.series button[aria-selected="true"]::after{
+  content:""; position:absolute; left:0; right:0; bottom:0; height:2px;
+  background:var(--ink);
+  transform-origin:left center;
+  animation:markUnder 60ms var(--c-press) both;   /* 60ms 高光，只此一下 */
+}
+@keyframes markUnder{
+  from{ transform:scaleX(0) }
+  to  { transform:scaleX(1) }
+}
+
+/* 网格：桌面 4 列 / 平板 3 列 / 手机 2 列（AC-27）
+   间距按展陈公式，下限为卡片宽的 5%（AC-72） */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:clamp(26px,3.6vw,60px) clamp(20px,2.8vw,46px);
+  max-width:1560px;
+  margin:0 auto;
+  padding:132px clamp(24px,6vw,96px) 120px;
+  align-items:start;
+}
+
+/* ---------- 6 · 印张 · 展陈骨架（恒定层） ---------- */
+
+/* 卡片 = 外框（严格 2:3，AC-26）+ 内部两段：装裱区（弹性）+ 铭牌区（自适应）
+   ★ 两段都是【流内元素】，谁也不覆盖谁 —— 上一版铭牌被绝对定位的画面层盖住，
+     根因就是「画面浮在文字上面」；这里从结构上根除。 */
+.plate{
+  position:relative;
+  display:flex; flex-direction:column;
+  width:100%; aspect-ratio:2/3;               /* 外框比例，不裁切不变形 */
+  border:0; padding:0; background:none; cursor:pointer;
+  text-align:center; font:inherit; color:inherit;
+  /* 入场：默认在纸下压着，进视口后揭起 */
+  opacity:0; transform:translateY(18px);
+  transition:opacity 420ms var(--c-lift), transform 520ms var(--c-press);
+}
+.plate.in{ opacity:1; transform:none }
+
+/* —— 装裱区：卡纸（外框短边的 6%）—— */
+.mat{
+  flex:1; min-height:0;                        /* 弹性占满除铭牌外的全部高度 */
+  padding:var(--mat-pad);                      /* 卡纸：四周等宽 */
+  background:var(--mat);
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
+  /* 装裱窗的内影：不是投影，是「作品被嵌进去」的一道痕 */
+  box-shadow:inset 0 0 0 .5px rgba(35,32,25,.10);
+  transition:box-shadow 200ms var(--c-press);
+}
+
+/* —— 画心窗：作品按原比例完整放入，零裁切 ——
+   窗口比例由 JS 在图片 load 后写入 --ar（= 该图真实宽高比），
+   所以作品既不会变形、也不会被裁掉任何一条边。 */
+.win{
+  position:relative;
+  aspect-ratio:var(--ar, 2 / 3);
+  max-width:100%; max-height:100%;
+  min-width:0; min-height:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.win > img{
+  display:block;
+  width:100%; height:100%;
+  object-fit:contain;                          /* 零裁切（AC-26） */
+  /* 作品自身的一层薄影：把「这一张」从卡纸上托起来 */
+  box-shadow:0 1px 0 rgba(35,32,25,.10), 0 14px 28px -22px rgba(35,32,25,.55);
+}
+
+/* —— 空装裱：还没挂上作品的展位。虚线的框，不说话。——
+   ★ 它是「这一格将来要挂的那幅画」的占位，所以必须与作品【同比例】。
+   ★ 尺寸的正确来源：先让【高度】撑满卡纸内区，再由 aspect-ratio 推出宽度。
+     反过来（让宽度由内容决定）会让虚线框缩成文字那么大 —— 已经踩过一次。 */
+.slot{
+  height:100%;
+  aspect-ratio:2/3;
+  max-width:100%;
+  border:1px dashed rgba(35,32,25,.18);
+  display:flex; align-items:center; justify-content:center;
+}
+.slot-txt{
+  font-size:10px; font-weight:500; letter-spacing:.26em;
+  color:var(--ink-faint);
+  text-indent:.26em;
+}
+
+/* —— 铭牌：装裱区下方，三级字号（作品名 > 系列 > 编号），居中 ——
+   AC-74 的层级靠【字号与字重】，不靠颜色。 */
+.meta{
+  flex:0 0 auto;
+  padding:12px 6% 4px;
+  display:flex; flex-direction:column; align-items:center; gap:4px;
+  text-align:center;
+}
+.meta-name{
+  font-size:13px; font-weight:600; letter-spacing:.14em;
+  color:var(--ink);
+}
+.meta-series{
+  font-size:10px; font-weight:500; letter-spacing:.22em;
+  color:var(--ink-soft);
+}
+.meta-no{
+  font-size:10px; font-weight:500; letter-spacing:.18em;
+  color:var(--ink-faint);
+}
+
+/* 悬停：卡纸的内影略深一档，作品被「抬起来」一点点。
+   ★ 纸（卡纸/外框）不动，动的只有那一道内影。 */
+.plate:hover .mat,
+.plate:focus-visible .mat{ box-shadow:inset 0 0 0 .5px rgba(35,32,25,.22) }
+.plate:focus-visible{ outline:2px solid var(--ink); outline-offset:6px }
+
+/* 空态：整个主题都没有作品时的兜底（当前数据下不会走到） */
+.empty{
+  grid-column:1/-1; padding:16vh 0; text-align:center;
+  font-size:12px; letter-spacing:.26em;
+  color:var(--ink-faint);
+}
+
+/* ---------- 7 · 聚焦（F-05） ---------- */
+
+/* 用「原位放大移入」，不是叠黑底再弹图（AC-34）。
+   遮罩要够重，让后景退成「墙」，否则网格卡片会和前景抢焦点（AC-53 一墙一主角）。 */
+.focus{
+  position:fixed; inset:0; z-index:40;
+  display:none; align-items:center; justify-content:center;
+  padding:72px clamp(24px,6vw,96px);
+  background:color-mix(in srgb, var(--wall) 74%, transparent);
+  backdrop-filter:blur(4px) saturate(.92);
+}
+.focus.open{ display:flex; animation:focusIn 220ms var(--c-press) both }
+@keyframes focusIn{ from{ opacity:0 } to{ opacity:1 } }
+
+.focus-stage{
+  display:flex; align-items:center; gap:clamp(24px,4vw,64px);
+  max-width:1280px; width:100%; justify-content:center;
+}
+
+/* 前景大图：外框 2:3 + 卡纸，作品零裁切完整放入 */
+.focus-art{
+  position:relative; height:min(72vh,760px); aspect-ratio:2/3;
+  background:var(--mat); padding:var(--mat-pad);
+  overflow:hidden;
+  box-shadow:
+    0 1px 0 rgba(35,32,25,.10),
+    0 22px 44px -26px rgba(35,32,25,.5),
+    0 60px 110px -60px rgba(35,32,25,.7);
+}
+/* 换印层：整层绝对定位，装裱留白由自身 padding 承担 */
+.focus-art .layer{
+  position:absolute; inset:0;
+  padding:var(--mat-pad);
+  display:flex; align-items:center; justify-content:center;
+}
+.focus-art .layer img{
+  display:block; width:100%; height:100%;
+  object-fit:contain;
+  box-shadow:0 1px 0 rgba(35,32,25,.10), 0 14px 28px -22px rgba(35,32,25,.55);
+}
+
+/* —— 换印 · 显影语法「刷子刷出」（DESIGN_V5 §3 // D6）——
+   ★ 原来的「错版对位」已整体退场：它在显影中途露的是【错的颜色】（重影 / 彩边），
+     柔和的作品一上就被照成显像管故障。刷子是【累积性】显影 ——
+     颜色从头到尾都是对的，观众看到的只是「位置还没到」。
+   节拍沿用 §6.5：走位 60% / 收束 30%（见 buildBrush 的错峰计算），
+   最后一格用 --c-press 快起急停收笔 = 那 10% 的高光，只此一次。
+
+   ★ 为什么是「一条条退」而不是「一条条画」：
+     遮蔽层铺在作品【上面】、用卡纸色，退开一格就亮出一格 ——
+     全程只挡不改，不碰画面像素，所以对任何色彩风格都安全。 */
+.brush{
+  position:absolute; inset:0;              /* 盖满整个装裱框：卡纸色盖卡纸，看不出多盖了 */
+  overflow:hidden; pointer-events:none;    /* 裁掉最后一格伸出去的部分 */
+}
+.brush i{
+  position:absolute; top:-1px; bottom:-1px; display:block;
+  background:var(--mat);
+  transform-origin:right center;           /* 收刷：向左退，画面从左往右亮出来 */
+  animation:brushSeg var(--t-swap) var(--c-squeegee) var(--delay, 0ms) both;
+}
+@keyframes brushSeg{
+  0%  { transform:scaleX(1) }
+  100%{ transform:scaleX(0) }
+}
+
+.focus-info{ display:flex; flex-direction:column; gap:10px; min-width:220px; max-width:320px }
+.focus-name{
+  font-size:clamp(22px,3.2vw,32px); font-weight:700; letter-spacing:.04em;
+  color:var(--ink);
+}
+.focus-series{
+  font-size:12px; font-weight:500; letter-spacing:.20em;
+  color:var(--ink-soft);
+}
+.focus-count{
+  font-size:11px; font-weight:600; letter-spacing:.18em; margin-top:6px;
+  color:var(--ink-faint);
+}
+.focus-hint{
+  margin-top:18px; font-size:10px; letter-spacing:.16em;
+  color:var(--ink-faint);
+}
+
+/* 左右箭头：皮相要退到近乎不存在（组织感隐形） */
+.nav-btn{
+  position:fixed; z-index:45; top:50%; transform:translateY(-50%);
+  width:46px; height:46px; border:0; border-radius:50%;
+  background:none; cursor:pointer;
+  display:grid; place-items:center;
+  color:color-mix(in srgb, var(--ink) 40%, transparent);
+  transition:color 180ms var(--c-press), background 180ms var(--c-press);
+}
+.nav-btn:hover{ color:var(--ink); background:rgba(35,32,25,.05) }
+.nav-btn.prev{ left:clamp(12px,3vw,48px) }
+.nav-btn.next{ right:clamp(12px,3vw,48px) }
+.nav-btn svg{ width:16px; height:16px }
+
+.close-btn{
+  position:fixed; top:22px; right:clamp(24px,6vw,96px); z-index:46;
+  border:0; background:none; cursor:pointer;
+  font:inherit; font-size:11px; font-weight:600; letter-spacing:.20em;
+  color:color-mix(in srgb, var(--ink) 46%, transparent);
+  transition:color 180ms var(--c-press);
+}
+.close-btn:hover{ color:var(--ink) }
+
+/* ---------- 8 · 卡片错峰入位（M3 / AC-59 / AC-68） ---------- */
+
+/* 非均匀错峰，首尾间隔 ≈ 中段 2 倍。
+   错峰值绑定【卡片序号】而非点击次数 —— 所以连按 10 次节奏也不会塌。 */
+.plate.stagger{
+  animation:plateIn 600ms var(--c-press) both;
+  animation-delay:var(--d, 0ms);
+}
+@keyframes plateIn{
+  0%   { opacity:0; transform:translateY(16px) }
+  100% { opacity:1; transform:none }
+}
+/* 旧卡先退出：揭纸曲线，慢起快走 */
+.plate.leaving{
+  animation:plateOut 260ms var(--c-lift) both;
+}
+@keyframes plateOut{
+  0%   { opacity:1; transform:none }
+  100% { opacity:0; transform:translateY(-10px) }
+}
+
+/* ---------- 9 · 响应式（AC-27） ---------- */
+
+@media (max-width:1279px){
+  .grid{ grid-template-columns:repeat(3,1fr) }
+  .grid, .topbar, .focus{ padding-left:6vw; padding-right:6vw }
+}
+@media (max-width:767px){
+  .grid{ grid-template-columns:repeat(2,1fr); padding-top:112px; gap:26px 16px }
+  .topbar{ flex-direction:column; align-items:flex-start; gap:12px }
+  .series{ gap:12px; overflow-x:auto; width:100%; padding-bottom:2px }
+  .series button{ font-size:11px; letter-spacing:.12em; white-space:nowrap }
+  .focus-stage{ flex-direction:column; gap:18px }
+  .focus-art{ height:52vh }
+  .focus-info{ align-items:center; text-align:center }
+  .nav-btn{ top:auto; bottom:24px; transform:none }
+}
+
+/* ---------- 10 · 减少动态效果（AC-39 / AC-69） ---------- */
+
+/* 退化为「只保留高光帧与终态，删掉全部走位」——
+   一屏的 60%（走位）与 30%（收束）归零，只留下那 10%。 */
+@media (prefers-reduced-motion: reduce){
+  html{scroll-behavior:auto}
+  .curtain.top,
+  .curtain.bottom{ animation:none; transform:translateY(0) }
+  .unveil-mark{ animation:none; opacity:1 }
+  .unveil-line{ animation:none; transform:translate(-50%,-50%) scaleX(1) }
+  .unveil{ transition-duration:0ms }
+
+  .plate{ opacity:1 !important; transform:none !important }
+  .plate.stagger, .plate.leaving{ animation:none !important }
+
+  .series button[aria-selected="true"]::after{ animation:none }
+  /* 减少动态：刷子不播出 —— 作品直接呈现终态（DESIGN_V5 §3.4） */
+  .brush{ display:none }
+  .plate .mat{ transition-duration:0ms }
+}
+</style>
+</head>
+<body data-theme="arcana">
+
+<!-- 墙层：全程零位移 -->
+<div class="wall" aria-hidden="true"></div>
+
+<!-- ===== 揭幕 F-01：画面上只能有色块、字标、细线三样（AC-02）===== -->
+<div class="unveil" id="unveil">
+  <div class="unveil-press" aria-hidden="true">
+    <div class="curtain top"><i></i></div>
+    <div class="curtain bottom"><i></i></div>
+  </div>
+  <div class="unveil-mark"><b>ART EXHIBITION</b></div>
+  <div class="unveil-line" aria-hidden="true"></div>
+</div>
+
+<!-- ===== 展场 F-04 ===== -->
+<header class="topbar" id="topbar">
+  <a class="wordmark" href="#top">ART EXHIBITION</a>
+  <nav aria-label="Series">
+    <ul class="series" id="series"></ul>
+  </nav>
+</header>
+
+<main class="floor">
+  <div class="grid" id="grid"></div>
+</main>
+
+<!-- ===== 聚焦 F-05 ===== -->
+<section class="focus" id="focus" aria-modal="true" role="dialog" aria-label="Focus">
+  <button class="close-btn" id="closeBtn" type="button">CLOSE</button>
+  <div class="focus-stage">
+    <div class="focus-art" id="focusArt"></div>
+    <div class="focus-info">
+      <h2 class="focus-name" id="focusName"></h2>
+      <p class="focus-series" id="focusSeries"></p>
+      <p class="focus-count" id="focusCount"></p>
+      <p class="focus-hint">← → TO BROWSE　·　ESC TO CLOSE</p>
+    </div>
+  </div>
+  <button class="nav-btn prev" id="prevBtn" type="button" aria-label="Previous">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2L4 8l6 6"/></svg>
+  </button>
+  <button class="nav-btn next" id="nextBtn" type="button" aria-label="Next">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2l6 6-6 6"/></svg>
+  </button>
+</section>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ========================================================================
+     数据 · 六个主题（DESIGN_V5 §2.3）
+     ------------------------------------------------------------------------
+     · 分类按【主题】，材质降为属性字段 material（不参与导航、不显示为文字）
+     · 序号是作者策展顺序。v5 方案甲：位次永按策展序，热度只改【入场先后】
+     · slot：该主题的展位数 = 策展决定。目前只有 ARCANA 挂上了真图，
+       其余主题保留【空装裱】—— 展位不因为有图没图而增删。
+     · 作品名/系列名是【内容】，不计入「界面文案 ≤40 词」（AC-31）
+     ====================================================================== */
+  var SERIES = [
+    { id:'arcana',     name:'ARCANA',     slot:4, works:[
+      { name:'THE MOON',  img:'images/arcana/moon.jpg',  material:'print',
+        note:'月之牌 · 潜意识与倒影。中轴对称稳住画面，唯一的金色月轮只此一处，占主角位。' },
+      { name:'THE STAR',  img:'images/arcana/star.jpg',  material:'print',
+        note:'星辰牌 · 希望与灌溉。两条水弧从对角线方向汇入中央，把视线锁回人物。' },
+      { name:'THE SUN',   img:'images/arcana/sun.jpg',   material:'print',
+        note:'太阳牌 · 完满与敞开。放射线从圆心向外扩散，向日葵做底，把人物托到光中央。' },
+      { name:'THE WORLD', img:'images/arcana/world.jpg', material:'print',
+        note:'世界牌 · 完成与循环。月桂花环作闭合圆，四角兽首压角，人物占据圆心。' }
+    ]},
+    { id:'sleight',    name:'SLEIGHT',    slot:4, works:[] },
+    { id:'unreal',     name:'UNREAL',     slot:4, works:[] },
+    { id:'limbo',      name:'LIMBO',      slot:4, works:[] },
+    { id:'world-line', name:'WORLD LINE', slot:4, works:[] },
+    { id:'fifty-two',  name:'FIFTY-TWO',  slot:4, works:[] }
+  ];
+  /* ★ note 字段保留但【不渲染】：
+     个人规则 B 要求站点界面文案一律英文（中文不进页面），
+     PRD §6.3 也禁止说明性段落 —— 两者都指向「说明文字不上页面」。
+     但它是你写的作品说明，删掉就找不回来了，所以留在数据里备用。 */
+
+  var $  = function(s){ return document.querySelector(s); };
+  var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
+  var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var grid      = $('#grid');
+  var seriesNav = $('#series');
+  var topbar    = $('#topbar');
+  var focusEl   = $('#focus');
+  var focusArt  = $('#focusArt');
+  var unveil    = $('#unveil');
+
+  /* 默认落在第一个【有作品】的主题上，免得一进来是一片空装裱 */
+  var firstWithWorks = SERIES.filter(function(s){ return s.works.length; })[0] || SERIES[0];
+  var state = { series:firstWithWorks, focusIndex:0, open:false };
+  var shifting = false;
+
+  function pad(n){ return String(n).padStart(3, '0'); }
+
+  /* ========================================================================
+     主题导航（= 一级导航，唯一入口）
+     ====================================================================== */
+  function buildNav(){
+    seriesNav.innerHTML = '';
+    SERIES.forEach(function(s){
+      var li = document.createElement('li');
+      var b  = document.createElement('button');
+      b.type = 'button';
+      b.textContent = s.name;
+      b.dataset.id = s.id;
+      b.setAttribute('aria-selected', String(s.id === state.series.id));
+      b.addEventListener('click', function(){ shiftTheme(s.id); });
+      li.appendChild(b);
+      seriesNav.appendChild(li);
+    });
+  }
+
+  /* 错峰数组（M3 / AC-59）：首尾疏、中段密，首尾约为中段的 2 倍 */
+  function staggerDelay(i, total){
+    if (total <= 1) return 0;
+    var t = i / (total - 1);                           // 0 → 1
+    var w = Math.abs(t - 0.5) * 2;                     // 中点 0，两端 1
+    return Math.round(30 + Math.pow(w, 1.6) * 150);    // 中段 ~30ms，首尾 ~180ms
+  }
+
+  /* ========================================================================
+     渲染一张展位
+     ====================================================================== */
+  function plateOf(work, i, series){
+    var hasWork = !!work;
+    var name    = hasWork ? work.name : '';
+
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'plate';
+    btn.style.setProperty('--d', staggerDelay(i, series.slot) + 'ms');
+    btn.setAttribute('aria-label', hasWork ? name : 'Empty slot');
+
+    var matHTML;
+    if (hasWork){
+      /* 画心窗：--ar 由图片自身的真实宽高比写入 → 零裁切、不变形 */
+      matHTML =
+        '<span class="mat">' +
+          '<span class="win">' +
+            '<img src="' + work.img + '" alt="' + name + '" loading="lazy">' +
+          '</span>' +
+        '</span>' +
+        '<span class="meta">' +
+          '<span class="meta-name">' + name + '</span>' +
+          '<span class="meta-series">' + series.name + '</span>' +
+          '<span class="meta-no">No. ' + pad(i + 1) + '</span>' +
+        '</span>';
+    } else {
+      /* 空装裱：这一格是策展位，作品还没挂上 */
+      matHTML =
+        '<span class="mat">' +
+          '<span class="slot"><span class="slot-txt">IN PROGRESS</span></span>' +
+        '</span>' +
+        '<span class="meta">' +
+          '<span class="meta-name">&nbsp;</span>' +
+          '<span class="meta-series">' + series.name + '</span>' +
+          '<span class="meta-no">No. ' + pad(i + 1) + '</span>' +
+        '</span>';
+    }
+
+    btn.innerHTML = matHTML;
+    if (hasWork) btn.addEventListener('click', function(){ openFocus(i); });
+    else btn.disabled = true;
+
+    return btn;
+  }
+
+  /* 图片载入后，把真实宽高比写给画心窗 —— 这一步是「零裁切」的技术保证 */
+  function bindAspect(){
+    $$('.win img').forEach(function(img){
+      var win = img.parentNode;
+      var set = function(){
+        if (img.naturalWidth && img.naturalHeight){
+          win.style.setProperty('--ar', img.naturalWidth + ' / ' + img.naturalHeight);
+        }
+      };
+      if (img.complete) set(); else img.addEventListener('load', set);
+    });
+  }
+
+  function renderFloor(animate){
+    var s = state.series;
+    grid.innerHTML = '';
+
+    var total = s.works.length ? s.works.length : s.slot;
+    var frag  = document.createDocumentFragment();
+    for (var i = 0; i < total; i++){
+      frag.appendChild(plateOf(s.works[i] || null, i, s));
+    }
+    grid.appendChild(frag);
+
+    var plates = $$('.plate');
+    if (animate && !REDUCED){
+      plates.forEach(function(c){ c.classList.add('stagger'); });
+      /* 动画播完后清掉内联动画，交还给 IntersectionObserver 管入场 */
+      window.setTimeout(function(){
+        plates.forEach(function(c){ c.classList.remove('stagger'); c.classList.add('in'); });
+      }, 900);
+    } else {
+      plates.forEach(function(c){ c.classList.add('in'); });
+    }
+    bindAspect();
+    observeCards();
+  }
+
+  /* 滚动依次浮现（AC-30） */
+  var io;
+  function observeCards(){
+    if (io) io.disconnect();
+    io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (e.isIntersecting){
+          e.target.classList.add('in');
+          io.unobserve(e.target);
+        }
+      });
+    }, { rootMargin:'0px 0px -8% 0px', threshold:.05 });
+    $$('.plate').forEach(function(c){ io.observe(c); });
+  }
+
+  /* ========================================================================
+     切换主题
+     ------------------------------------------------------------------------
+     v5 的墙是「随作品生成、且只在聚焦时变」（DESIGN_V5 §4.2），
+     所以在网格里换主题时【墙不动】——动的只有卡片的错峰出场。
+     ====================================================================== */
+  function shiftTheme(id){
+    var next = SERIES.filter(function(s){ return s.id === id; })[0];
+    if (!next || next.id === state.series.id || shifting) return;
+
+    shifting = true;
+    $$('.plate').forEach(function(c){ c.classList.add('leaving'); });
+
+    window.setTimeout(function(){
+      state.series = next;
+      state.focusIndex = 0;
+      document.body.dataset.theme = next.id;
+      history.replaceState(null, '', '#' + next.id);
+      try { localStorage.setItem('art-exhibition-theme', next.id); } catch(e){}
+      $$('#series button').forEach(function(b){
+        b.setAttribute('aria-selected', String(b.dataset.id === next.id));
+      });
+      renderFloor(true);
+    }, REDUCED ? 0 : 260);
+
+    window.setTimeout(function(){ shifting = false; }, REDUCED ? 60 : 900);
+  }
+
+  /* ========================================================================
+     显影语法 · 「刷子刷出」（DESIGN_V5 §3 // D6）
+     ------------------------------------------------------------------------
+     · 一次连续的手部动作，从无到有，只此一次；单方向（左→右）
+     · 手法：把画心窗竖切成 n 条「刷痕」，按序号递增收刷 = 分段错峰的遮蔽
+     · 边缘：不用 filter 做毛边（性能 / 兼容风险），
+       改用【分段矩形制造参差】—— 前沿一道带斜角的羽化 + 延迟抖动 + 宽度不一
+     · ★ 关键性质：遮蔽层只挡不改、不碰画面像素 → 对任何色彩风格都安全
+       （这正是它比「错版」稳的地方：柔和的作品不会被照成故障画面）
+     ====================================================================== */
+  var BRUSH_T = 420;                        /* 整套刷子走完 = --t-swap */
+
+  function buildBrush(layer){
+    var brush = document.createElement('span');
+    brush.className = 'brush';
+    brush.setAttribute('aria-hidden', 'true');
+    layer.appendChild(brush);               /* 先入 DOM，才量得到真实宽度 */
+
+    /* 段数按画心窗实际尺寸换算（示意值 9 段 × 20px，DESIGN_V5 §3.4） */
+    var n = Math.max(8, Math.min(14, Math.round(brush.clientWidth / 46)));
+    var W = 100 / n;                        /* 一段 = 画心窗宽的 1/n（%） */
+
+    /* ★ 错峰步进有个【下限】，不是调小就更快：
+       每条跟左邻叠 35%（为了静止时盖满、并压住前沿的羽化边），
+       于是某条一旦退到 scaleX < 0.74，它的左沿就越过了左邻的右沿，
+       中间那块「两不管」地带会【漏出画面】—— 表现为一道道细竖缝，像画面被切碎。
+       所以立一条纪律：左邻没撤完，这一条不许退穿。MARGIN = 0.78 就是它（留 0.04 余量），
+       步进只能比它大。这是靠截图才发现的 —— 代码全程没报错。 */
+    var MARGIN = 0.78;
+    var dur    = (BRUSH_T - 20) / (1 + (n - 1) * MARGIN);   /* 单条刷痕的走位时间 */
+    var step   = dur * MARGIN;                              /* 错峰步进（安全下限之上） */
+
+    for (var i = 0; i < n; i++){
+      var s = document.createElement('i');
+      s.style.left  = (i * W) + '%';
+      s.style.width = (W * 1.35) + '%';
+      /* 与前一条叠 35%（> 前沿羽化的 22%）：静止时盖得严，不会提前漏出画面 */
+      if (i > 0){
+        s.style.background =
+          'linear-gradient(' + (96 + Math.round(Math.random() * 8)) + 'deg,' +
+          ' color-mix(in srgb, var(--mat) 0%, transparent) 0,' +
+          ' var(--mat) 22%)';
+      }
+      /* 抖动只许【往后】加：往前加就等于把步进压到下限以下，缝又会回来 */
+      s.style.setProperty('--delay',
+        Math.round(i * step + (i > 0 ? Math.random() * 14 : 0)) + 'ms');
+      s.style.animationDuration = dur + 'ms';
+      /* 最后一格快起急停 = 收笔（那 10% 的高光，只此一次） */
+      if (i === n - 1) s.style.animationTimingFunction = 'var(--c-press)';
+      brush.appendChild(s);
+    }
+    return brush;
+  }
+
+  /* ========================================================================
+     聚焦 F-05
+     ====================================================================== */
+  function paintFocus(i, dir){
+    /* dir 参数保留但【不再使用】：刷子是单方向推进（左→右，DESIGN_V5 §3.2），
+       方向感交给错峰节奏，不再靠左右位移表达 —— 那是旧「对位」语法的残影。 */
+    var works = state.series.works;
+    var w     = works[i];
+    if (!w) return;
+
+    var layer = document.createElement('div');
+    layer.className = 'layer';
+    layer.innerHTML = '<img src="' + w.img + '" alt="' + w.name + '">';
+
+    var olds = $$('#focusArt .layer');       /* 先取旧层，再把新层压上去 */
+    focusArt.appendChild(layer);
+
+    if (!REDUCED){
+      var brush = buildBrush(layer);
+      window.setTimeout(function(){
+        /* 刷满即定：遮蔽层撤干净，之后不留残余动作（DESIGN_V5 §3.2「结束」） */
+        if (brush.parentNode) brush.parentNode.removeChild(brush);
+        olds.forEach(function(o){ if (o.parentNode) o.parentNode.removeChild(o); });
+      }, BRUSH_T + 60);
+    } else {
+      /* 减少动态：不播出刷子，旧层直接让位 */
+      olds.forEach(function(o){ if (o.parentNode) o.parentNode.removeChild(o); });
+    }
+
+    $('#focusName').textContent   = w.name;
+    $('#focusSeries').textContent = state.series.name;
+    $('#focusCount').textContent  = 'No. ' + pad(i + 1) + ' / ' + pad(works.length);
+  }
+
+  /* 关闭后回到原位（AC-37）用的滚动位置 */
+  var savedScroll = 0;
+  function restoreScroll(){ window.scrollTo(0, savedScroll); }
+
+  function openFocus(i){
+    if (!state.series.works[i]) return;
+    state.open = true;
+    state.focusIndex = i;
+
+    /* ★ FLIP：先量出网格里那张卡的屏幕矩形，再让聚焦大图从那个矩形「长出来」。
+       这就是 AC-34 要求的「从网格原位放大移入」，而不是黑底弹图。 */
+    var srcCard = $$('.plate')[i];
+    var first = srcCard ? srcCard.querySelector('.mat').getBoundingClientRect() : null;
+
+    focusEl.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    focusArt.innerHTML = '';
+
+    if (first && !REDUCED){
+      var last = focusArt.getBoundingClientRect();
+      focusArt.style.transformOrigin = 'top left';
+      focusArt.style.transition = 'none';
+      focusArt.style.transform =
+        'translate(' + (first.left - last.left) + 'px,' + (first.top - last.top) + 'px)' +
+        ' scale(' + (first.width / last.width) + ')';
+      focusArt.style.opacity = '0.35';
+      requestAnimationFrame(function(){
+        focusArt.style.transition =
+          'transform 420ms var(--c-press), opacity 300ms var(--c-press)';
+        focusArt.style.transform = 'translate(0,0) scale(1)';
+        focusArt.style.opacity = '1';
+      });
+      window.setTimeout(function(){
+        focusArt.style.transition = '';
+        focusArt.style.transform = '';
+        focusArt.style.transformOrigin = '';
+        focusArt.style.opacity = '';
+      }, 460);
+    }
+
+    paintFocus(i, 1);
+    savedScroll = window.scrollY;
+  }
+
+  function closeFocus(){
+    /* 关闭：反向缩回它原来的位置（AC-36） */
+    var srcCard = $$('.plate')[state.focusIndex];
+    if (srcCard && !REDUCED){
+      var last  = srcCard.querySelector('.mat').getBoundingClientRect();
+      var first = focusArt.getBoundingClientRect();
+      focusArt.style.transformOrigin = 'top left';
+      focusArt.style.transition = 'transform 300ms var(--c-lift), opacity 220ms var(--c-lift)';
+      focusArt.style.transform =
+        'translate(' + (last.left - first.left) + 'px,' + (last.top - first.top) + 'px)' +
+        ' scale(' + (last.width / first.width) + ')';
+      focusArt.style.opacity = '0';
+    }
+    window.setTimeout(function(){
+      state.open = false;
+      focusEl.classList.remove('open');
+      document.body.style.overflow = '';
+      focusArt.style.transition = '';
+      focusArt.style.transform = '';
+      focusArt.style.transformOrigin = '';
+      focusArt.style.opacity = '';
+      restoreScroll();                          // 关闭后滚动位置不变（AC-37）
+    }, REDUCED ? 0 : 300);
+  }
+
+  function step(d){
+    var n = state.series.works.length;
+    if (!n) return;
+    state.focusIndex = (state.focusIndex + d + n) % n;
+    paintFocus(state.focusIndex, d);
+  }
+
+  /* ========================================================================
+     事件绑定
+     ====================================================================== */
+  $('#nextBtn').addEventListener('click', function(){ step(1); });
+  $('#prevBtn').addEventListener('click', function(){ step(-1); });
+  $('#closeBtn').addEventListener('click', closeFocus);
+
+  document.addEventListener('keydown', function(e){
+    if (!state.open) return;
+    if (e.key === 'Escape')     { closeFocus(); }
+    if (e.key === 'ArrowRight') { step(1); }
+    if (e.key === 'ArrowLeft')  { step(-1); }
+  });
+
+  // 移动端横向滑动（AC-70）
+  var touchX = 0;
+  focusEl.addEventListener('touchstart', function(e){ touchX = e.touches[0].clientX; }, { passive:true });
+  focusEl.addEventListener('touchend', function(e){
+    var dx = e.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 42) step(dx < 0 ? 1 : -1);
+  }, { passive:true });
+
+  // 顶栏吸顶
+  window.addEventListener('scroll', function(){
+    topbar.classList.toggle('stuck', window.scrollY > 40);
+  }, { passive:true });
+
+  /* ========================================================================
+     揭幕的收尾：1200ms 后自动进入展场；
+     期间任意点击 / 按键 / 滚动 → 立即跳终态（AC-04 / AC-71）
+     ====================================================================== */
+  function endUnveil(){
+    if (unveil.classList.contains('done')) return;
+    unveil.classList.add('done');
+    window.setTimeout(function(){ unveil.style.display = 'none'; }, 200);
+  }
+  function skipUnveil(){
+    unveil.classList.add('skip');   // 掐掉残余动画（不播尾巴）
+    endUnveil();
+  }
+
+  ['click','keydown','wheel','touchstart'].forEach(function(ev){
+    window.addEventListener(ev, skipUnveil, { once:false, passive:true });
+  });
+  window.setTimeout(endUnveil, REDUCED ? 240 : 1200);
+
+  /* ========================================================================
+     初始化：锚点 / 记忆主题优先（AC-12 / AC-13）
+     ====================================================================== */
+  function boot(){
+    var hash  = (location.hash || '').replace('#','');
+    var saved = null;
+    try { saved = localStorage.getItem('art-exhibition-theme'); } catch(e){}
+    var want = SERIES.filter(function(s){ return s.id === hash; })[0]
+            || SERIES.filter(function(s){ return s.id === saved && s.works.length; })[0];
+
+    if (want) state.series = want;
+    document.body.dataset.theme = state.series.id;
+    if (!hash) history.replaceState(null, '', '#' + state.series.id);
+
+    buildNav();
+    renderFloor(false);
+
+    /* 调试开关：?focus=N 直接打开聚焦视图看第 N 张。
+       只为方便肉眼验收与截图，不参与正常浏览，也不产生任何外部请求。 */
+    var q = new URLSearchParams(location.search);
+    if (q.has('focus')){
+      var n = Math.max(0, Math.min(state.series.works.length - 1, parseInt(q.get('focus'), 10) || 0));
+      skipUnveil();
+      window.setTimeout(function(){ openFocus(n); }, 80);
+    }
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>
