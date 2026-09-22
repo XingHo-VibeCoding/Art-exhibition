@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARCANA · X — Plate Proof</title>
+<style>
+/* ==========================================================================
+   ART-EXHIBITION / 单卡样张 · ARCANA X「命运」
+   孤立文件：不引用任何外部资源，不进入 mvp/index.html，不参与站点导航。
+   --------------------------------------------------------------------------
+   设计依据（全部来自 PRD.md）
+     60-30-10+金属：纸 60%（装裱边）／ 墨 30%（画面）／ 金属 10%（版号·线脚）
+     第 N+1 色：纸色本身就是那个不占配比的第 4 色，由露白产生
+     印刷物证：P1 错版 2-4px ／ P2 十字规矩线 ／ P3 金属版号 ／ P4 网点 7px·13%
+               P5 85% 实地墨 ／ P6 纸色是第 N+1 色
+     四条工序曲线：刮墨匀速 ／ 压印急停 ／ 对位过冲回正（全篇仅此一处）／ 揭纸慢起快走
+   ========================================================================== */
+
+:root{
+  /* —— 纸：第 N+1 色，不占配比 —— */
+  --paper:      #EDE6D8;
+  --paper-deep: #E3DAC8;
+  --paper-ink:  #23201C;
+
+  /* —— 墨：取自画面本身（深藏蓝 + 米白），不另造色 —— */
+  --ink-main:   #1B2340;
+  --ink-sub:    #E7E0CE;
+
+  /* —— 金属专版：画面里的金，只走线脚与版号，不做填充 —— */
+  --metal:      #C09631;
+  --metal-lit:  #E0BC63;
+
+  /* —— 四条工序曲线（PRD §6.5.4）—— 全篇禁用 ease / ease-in-out / 弹簧 —— */
+  --c-squeegee: cubic-bezier(0, 0, 1, 1);              /* 刮墨：匀速，无加减速 */
+  --c-press:    cubic-bezier(0.08, 0.92, 0.14, 1);     /* 压印：快起、急停、不回弹 */
+  --c-register: cubic-bezier(0.34, 1.42, 0.52, 1);     /* 对位：过冲后回正，只回一次 */
+  --c-lift:     cubic-bezier(0.62, 0, 0.86, 0.22);     /* 揭纸：慢起、快走 */
+
+  /* —— 时长：尺寸无关，按 PRD 定值 —— */
+  --t-mount: 420ms;   /* 装裱归位（本样张的主事件） */
+  --t-hover: 200ms;   /* 悬停错版分离／合回 */
+
+  /* —— 错版量（P1）—— */
+  --off-x: 2.5px;
+  --off-y: -1.8px;
+  --off-hover-x: 7px;
+  --off-hover-y: -5px;
+
+  --sheet-h: min(84vh, 780px);
+  --sheet-w: calc(var(--sheet-h) * 2 / 3);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+html,body{height:100%}
+
+body{
+  background:var(--paper-deep);
+  /* 版面纸：极淡的竖向纸纹，让「这是纸不是屏幕」在第一眼成立 */
+  background-image:
+    repeating-linear-gradient(90deg, rgba(35,32,28,.028) 0 1px, transparent 1px 4px),
+    radial-gradient(circle, rgba(35,32,28,.5) .5px, transparent .5px);
+  background-size:auto, 9px 9px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:5vh 4vw;
+  font-family:Georgia, "Times New Roman", "Songti SC", serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ==========================================================================
+   印张 · 卡片本体（严格 2:3，A 条）
+   ========================================================================== */
+.sheet{
+  position:relative;
+  width:var(--sheet-w);
+  height:var(--sheet-h);
+  background:var(--paper);
+  /* 纸纹：细斜纹 + 网点底（P4 的同一套网点，只是更稀） */
+  background-image:
+    repeating-linear-gradient(88deg, rgba(35,32,28,.022) 0 1px, transparent 1px 5px);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.5) inset,
+    0 18px 40px -22px rgba(35,32,28,.42);
+}
+
+/* 纸张颗粒（P6：纸不是空白，是一块免费的版） */
+.sheet::after{
+  content:"";
+  position:absolute; inset:0;
+  pointer-events:none;
+  opacity:.5;
+  mix-blend-mode:multiply;
+  background-image:
+    radial-gradient(circle, rgba(35,32,28,.34) .45px, transparent .45px);
+  background-size:6px 6px;
+}
+
+/* 印张边线：距纸边 22px 的一圈细线 */
+.edge-line{
+  position:absolute;
+  inset:22px;
+  border:.5px solid rgba(35,32,28,.5);
+  pointer-events:none;
+}
+
+/* ==========================================================================
+   十字规矩线（P2）—— 印张边线之外，四角各一
+   ========================================================================== */
+.mark{
+  position:absolute;
+  width:13px; height:13px;
+  pointer-events:none;
+}
+.mark::before,.mark::after{
+  content:"";
+  position:absolute;
+  background:var(--paper-ink);
+  opacity:.88;
+}
+.mark::before{ left:0; right:0; top:6px; height:.5px }   /* 横臂 */
+.mark::after { top:0; bottom:0; left:6px; width:.5px }   /* 竖臂 */
+.mark.tl{ left:10.5px; top:10.5px }
+.mark.tr{ right:10.5px; top:10.5px }
+.mark.bl{ left:10.5px; bottom:10.5px }
+.mark.br{ right:10.5px; bottom:10.5px }
+
+/* ==========================================================================
+   画心 · 装裱窗
+   原图 832×1216（0.6842），按原比例完整嵌入 —— 零裁切（AC-26）
+   ========================================================================== */
+.window{
+  position:absolute;
+  left:10.5%;
+  right:10.5%;
+  top:7.6%;
+  aspect-ratio:832 / 1216;
+  overflow:hidden;
+  /* 装裱窗的内影：不是投影，是「纸被压出的一道痕」 */
+  box-shadow:0 0 0 .5px rgba(35,32,28,.3);
+}
+
+/* —— 墨层：85% 实地墨（P5）。multiply 让纸色透上来，纯色因此不满 —— */
+.plate{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover;
+  mix-blend-mode:multiply;
+  filter:brightness(1.06) saturate(1.03) contrast(1.02);
+}
+
+/* —— 错版层（P1）：同一块金版的第二次着墨，固定方向偏移 —— */
+.plate-ghost{
+  position:absolute; inset:0;
+  width:100%; height:100%;
+  object-fit:cover;
+  mix-blend-mode:screen;
+  opacity:.5;
+  /* 只留下亮部（金线与人物的米白）当作偏移的金版 */
+  filter:sepia(.85) saturate(2.6) hue-rotate(-6deg) brightness(.92) contrast(1.5);
+  transform:translate(var(--off-x), var(--off-y));
+  transition:transform var(--t-hover) var(--c-press);
+}
+
+/* —— 网点底（P4）：7px 间距 / 13% 墨量 —— */
+.dots{
+  position:absolute; inset:0;
+  pointer-events:none;
+  opacity:.13;
+  mix-blend-mode:overlay;
+  background-image:radial-gradient(circle, var(--ink-sub) .5px, transparent .5px);
+  background-size:7px 7px;
+}
+
+/* ==========================================================================
+   版号 · 装裱边下沿（限量版画的编号就印在这里）
+   ========================================================================== */
+.edition{
+  position:absolute;
+  left:10.5%;
+  right:10.5%;
+  bottom:5.4%;
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:12px;
+}
+.edition-rule{
+  position:absolute;
+  left:10.5%; right:10.5%;
+  bottom:calc(5.4% + 21px);
+  height:.5px;
+  background:var(--metal);
+  opacity:.6;
+}
+/* AC-74 四级字号层级：系列名 > 作品名 > 编号 */
+.series{
+  font-size:11px;
+  letter-spacing:.34em;
+  text-transform:uppercase;
+  color:var(--paper-ink);
+  font-weight:400;
+}
+.work{
+  font-size:10px;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  color:rgba(35,32,28,.62);
+  font-weight:400;
+}
+.no{
+  font-family:Consolas, "Courier New", monospace;
+  font-size:11px;
+  letter-spacing:.1em;
+  color:var(--metal);
+  white-space:nowrap;
+}
+
+/* ==========================================================================
+   动效 —— 全篇只有一个事件：金版归位（对位）
+   其余一切静止。高光就是「合上」的那一下。
+   ========================================================================== */
+
+/* 墨层显影：匀速刮过（--c-squeegee），无加减速 */
+@keyframes inkDraw{
+  from{ opacity:0; clip-path:inset(0 100% 0 0) }
+  to  { opacity:1; clip-path:inset(0 0 0 0) }
+}
+@keyframes ghostIn{
+  from{ opacity:0 }
+  to  { opacity:.5 }
+}
+/* 文字与版号：压印，快起急停（--c-press） */
+@keyframes stampIn{
+  from{ opacity:0; transform:translateY(3px) }
+  to  { opacity:1; transform:translateY(0) }
+}
+
+.is-booting .plate      { animation:inkDraw var(--t-mount) var(--c-squeegee) both }
+.is-booting .plate-ghost{ animation:ghostIn var(--t-mount) var(--c-squeegee) 60ms both }
+.is-booting .edition,
+.is-booting .edition-rule,
+.is-booting .series,
+.is-booting .work,
+.is-booting .no         { animation:stampIn 240ms var(--c-press) 300ms both }
+
+/* 悬停：金版分离（P1 → 4-6px），移开 200ms 内合回 */
+.window:hover .plate-ghost,
+.window:focus-visible .plate-ghost,
+.window.force-misreg .plate-ghost{
+  transform:translate(var(--off-hover-x), var(--off-hover-y));
+}
+
+/* 点击画心 = 重演一次「金版归位」——全篇唯一的一次过冲回正 */
+.sheet.settling .plate-ghost{
+  animation:registerSettle var(--t-mount) var(--c-register) both;
+}
+@keyframes registerSettle{
+  0%   { transform:translate(9px, -7px) }
+  100% { transform:translate(var(--off-x), var(--off-y)) }
+}
+
+.window{ cursor:crosshair }
+
+/* ==========================================================================
+   降级（AC-39 / AC-69）：删掉全部走位，只留终态
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce){
+  .is-booting .plate,
+  .is-booting .plate-ghost,
+  .is-booting .edition,
+  .is-booting .edition-rule,
+  .sheet.settling .plate-ghost{ animation:none !important; opacity:1 }
+  .is-booting .plate-ghost{ opacity:.5 }
+  .is-booting .plate{ clip-path:none }
+  .plate-ghost{ transition:none }
+}
+</style>
+</head>
+<body>
+
+<main class="sheet is-booting" id="sheet">
+
+  <div class="edge-line"></div>
+
+  <i class="mark tl"></i><i class="mark tr"></i><i class="mark bl"></i><i class="mark br"></i>
+
+  <figure class="window" id="window" tabindex="0" aria-label="ARCANA X · 命运">
+    <img class="plate" src="fate.jpg" alt="命运 · 金色轮盘中央的静坐人物">
+    <img class="plate-ghost" src="fate.jpg" alt="" aria-hidden="true">
+    <div class="dots" aria-hidden="true"></div>
+  </figure>
+
+  <div class="edition-rule"></div>
+  <figcaption class="edition">
+    <span class="series">Arcana</span>
+    <span class="work">X · The Wheel</span>
+    <span class="no">No. 024 / 024</span>
+  </figcaption>
+
+</main>
+
+<script>
+(function(){
+  'use strict';
+
+  var sheet  = document.getElementById('sheet');
+  var win    = document.getElementById('window');
+  var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // 揭幕引导：先以「正在归位」入场，420ms 后落定
+  window.setTimeout(function(){ sheet.classList.remove('is-booting'); }, REDUCED ? 0 : 620);
+
+  // 点击画心 = 重演一次金版归位（可反复看那一次过冲）
+  win.addEventListener('click', function(){
+    sheet.classList.remove('settling');
+    void sheet.offsetWidth;          // 强制重排，让动画能重播
+    sheet.classList.add('settling');
+    window.setTimeout(function(){ sheet.classList.remove('settling'); }, 460);
+  });
+
+  // 调试开关：?misreg=1 直接停在「错版分离」状态，便于静态验收截图
+  // 只为肉眼比对用，不产生任何外部请求。
+  if (new URLSearchParams(location.search).has('misreg')) {
+    win.classList.add('force-misreg');
+  }
+})();
+</script>
+</body>
+</html>

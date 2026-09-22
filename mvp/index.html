@@ -38,6 +38,10 @@
   --ink-2:     #555046;                  /* 第二墨：揭幕的第二道色块 */
   --ink-soft:  rgba(35,32,25,.56);
   --ink-faint: rgba(35,32,25,.32);
+  --accent:    #9A332B;
+  --accent-soft:rgba(154,51,43,.16);
+  --grain:     rgba(35,32,25,.10);
+  --ink-on-mat:#232019;
 
   /* 装裱：卡纸宽度 = 外框【短边】的 6%（DESIGN_V5 §4.1）
      —— CSS 的 padding 百分比正是按【宽度】计算的，所以这一条天生对齐 */
@@ -56,6 +60,13 @@
   --t-swap:   420ms;
 }
 
+body[data-theme="arcana"]{ --wall:#E7E1D6; --wall-deep:#D3CAB9; --mat:#F7F4EE; --ink:#232019; --ink-2:#4C4A43; --ink-soft:rgba(35,32,25,.56); --ink-faint:rgba(35,32,25,.32); --accent:#9A332B; --accent-soft:rgba(154,51,43,.16); --grain:rgba(35,32,25,.10); --ink-on-mat:#232019; }
+body[data-theme="sleight"]{ --wall:#DDE4DF; --wall-deep:#C6D2CB; --mat:#F4F6F0; --ink:#1D2925; --ink-2:#6E302B; --ink-soft:rgba(29,41,37,.58); --ink-faint:rgba(29,41,37,.34); --accent:#9A3E35; --accent-soft:rgba(154,62,53,.15); --grain:rgba(29,41,37,.09); --ink-on-mat:#1D2925; }
+body[data-theme="unreal"]{ --wall:#D9E1E7; --wall-deep:#C0CDD6; --mat:#F5F7F8; --ink:#1D2B36; --ink-2:#35616C; --ink-soft:rgba(29,43,54,.56); --ink-faint:rgba(29,43,54,.32); --accent:#B85D3F; --accent-soft:rgba(184,93,63,.16); --grain:rgba(29,43,54,.09); --ink-on-mat:#1D2B36; }
+body[data-theme="limbo"]{ --wall:#303233; --wall-deep:#202223; --mat:#E9E7DF; --ink:#F1EEE6; --ink-2:#A7A49A; --ink-soft:rgba(241,238,230,.62); --ink-faint:rgba(241,238,230,.38); --accent:#D79B55; --accent-soft:rgba(215,155,85,.18); --grain:rgba(241,238,230,.09); --ink-on-mat:#2B2C29; }
+body[data-theme="world-line"]{ --wall:#E2D6C5; --wall-deep:#CDBCA5; --mat:#F8F1E5; --ink:#273B3A; --ink-2:#4D6861; --ink-soft:rgba(39,59,58,.56); --ink-faint:rgba(39,59,58,.32); --accent:#A64A32; --accent-soft:rgba(166,74,50,.16); --grain:rgba(39,59,58,.10); --ink-on-mat:#273B3A; }
+body[data-theme="fifty-two"]{ --wall:#E5D6D1; --wall-deep:#CFBEB8; --mat:#FBF5F0; --ink:#33292A; --ink-2:#6A3F4B; --ink-soft:rgba(51,41,42,.56); --ink-faint:rgba(51,41,42,.32); --accent:#5D6E55; --accent-soft:rgba(93,110,85,.16); --grain:rgba(51,41,42,.09); --ink-on-mat:#33292A; }
+
 /* ---------- 2 · 基础 ---------- */
 
 *{margin:0;padding:0;box-sizing:border-box}
@@ -69,6 +80,7 @@ body{
   font-family:"Helvetica Neue",Helvetica,Arial,"Segoe UI",system-ui,sans-serif;
   -webkit-font-smoothing:antialiased;
   overflow-x:hidden;
+  transition:background-color 480ms var(--c-press), color 480ms var(--c-press);
 }
 
 ::selection{background:var(--ink);color:var(--wall)}
@@ -80,6 +92,7 @@ body{
 .wall{
   position:fixed; inset:0; z-index:0; pointer-events:none;
   background-color:var(--wall);
+  transition:background-color 480ms var(--c-press);
 }
 .wall::after{
   /* 墙面颗粒：极淡的一层噪点，用 SVG 滤镜生成，零外部请求。
@@ -88,6 +101,7 @@ body{
   position:absolute; inset:0;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)' opacity='0.5'/%3E%3C/svg%3E");
   opacity:.10;
+  background-color:var(--grain);
   mix-blend-mode:multiply;
 }
 
@@ -214,7 +228,7 @@ body{
 .series button[aria-selected="true"]{ color:var(--ink) }
 .series button[aria-selected="true"]::after{
   content:""; position:absolute; left:0; right:0; bottom:0; height:2px;
-  background:var(--ink);
+  background:var(--accent);
   transform-origin:left center;
   animation:markUnder 60ms var(--c-press) both;   /* 60ms 高光，只此一下 */
 }
@@ -223,15 +237,16 @@ body{
   to  { transform:scaleX(1) }
 }
 
-/* 网格：桌面 4 列 / 平板 3 列 / 手机 2 列（AC-27）
-   间距按展陈公式，下限为卡片宽的 5%（AC-72） */
+/* 网格：桌面采用 12 列编辑网格，让一张主作建立展墙节奏，
+   其余作品以错位支撑，不把所有卡片压成同一排（路线 1）。
+   平板与手机再收束为稳定列数，保证作品比例和阅读顺序不变。 */
 .grid{
   display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:clamp(26px,3.6vw,60px) clamp(20px,2.8vw,46px);
-  max-width:1560px;
+  grid-template-columns:repeat(12,minmax(0,1fr));
+  gap:clamp(34px,5vw,84px) clamp(18px,2.4vw,42px);
+  max-width:1480px;
   margin:0 auto;
-  padding:132px clamp(24px,6vw,96px) 120px;
+  padding:148px clamp(24px,6vw,96px) 140px;
   align-items:start;
 }
 
@@ -243,6 +258,7 @@ body{
 .plate{
   position:relative;
   display:flex; flex-direction:column;
+  grid-column:span 3;
   width:100%; aspect-ratio:2/3;               /* 外框比例，不裁切不变形 */
   border:0; padding:0; background:none; cursor:pointer;
   text-align:center; font:inherit; color:inherit;
@@ -251,6 +267,29 @@ body{
   transition:opacity 420ms var(--c-lift), transform 520ms var(--c-press);
 }
 .plate.in{ opacity:1; transform:none }
+
+/* 编辑型展墙：第一张作品承担入口重量，后两张形成不等高呼吸，
+   最后一张回到中轴，保留系列的收束感。只对有作品的主题加这些类。 */
+.plate--lead{
+  grid-column:span 6;
+}
+.plate--right{
+  margin-top:clamp(20px,4vw,64px);
+}
+.plate--right-low{
+  margin-top:clamp(46px,9vw,132px);
+}
+.plate--closing{
+  grid-column:5 / span 4;
+  margin-top:clamp(18px,4vw,56px);
+}
+.plate--lead .mat{
+  box-shadow:
+    inset 0 0 0 .5px rgba(35,32,25,.14),
+    0 22px 44px -34px rgba(35,32,25,.42);
+}
+.plate--lead .meta{ padding-top:16px }
+.plate--lead .meta-name{ font-size:15px; letter-spacing:.16em }
 
 /* —— 装裱区：卡纸（外框短边的 6%）—— */
 .mat{
@@ -261,7 +300,7 @@ body{
   overflow:hidden;
   /* 装裱窗的内影：不是投影，是「作品被嵌进去」的一道痕 */
   box-shadow:inset 0 0 0 .5px rgba(35,32,25,.10);
-  transition:box-shadow 200ms var(--c-press);
+  transition:background-color 480ms var(--c-press), box-shadow 200ms var(--c-press);
 }
 
 /* —— 画心窗：作品按原比例完整放入，零裁切 ——
@@ -295,7 +334,7 @@ body{
 }
 .slot-txt{
   font-size:10px; font-weight:500; letter-spacing:.26em;
-  color:var(--ink-faint);
+  color:color-mix(in srgb, var(--ink-on-mat) 52%, transparent);
   text-indent:.26em;
 }
 
@@ -309,15 +348,15 @@ body{
 }
 .meta-name{
   font-size:13px; font-weight:600; letter-spacing:.14em;
-  color:var(--ink);
+  color:var(--ink-on-mat);
 }
 .meta-series{
   font-size:10px; font-weight:500; letter-spacing:.22em;
-  color:var(--ink-soft);
+  color:color-mix(in srgb, var(--ink-on-mat) 58%, transparent);
 }
 .meta-no{
   font-size:10px; font-weight:500; letter-spacing:.18em;
-  color:var(--ink-faint);
+  color:color-mix(in srgb, var(--ink-on-mat) 42%, transparent);
 }
 
 /* 悬停：卡纸的内影略深一档，作品被「抬起来」一点点。
@@ -464,11 +503,19 @@ body{
 /* ---------- 9 · 响应式（AC-27） ---------- */
 
 @media (max-width:1279px){
-  .grid{ grid-template-columns:repeat(3,1fr) }
+  .grid{ grid-template-columns:repeat(6,minmax(0,1fr)) }
+  .plate{ grid-column:span 2 }
+  .plate--lead{ grid-column:span 4 }
+  .plate--closing{ grid-column:3 / span 2 }
   .grid, .topbar, .focus{ padding-left:6vw; padding-right:6vw }
 }
 @media (max-width:767px){
-  .grid{ grid-template-columns:repeat(2,1fr); padding-top:112px; gap:26px 16px }
+  .grid{ grid-template-columns:repeat(2,minmax(0,1fr)); padding-top:112px; gap:26px 16px }
+  .plate,
+  .plate--lead,
+  .plate--closing{ grid-column:span 1; margin-top:0 }
+  .plate--lead{ grid-column:1 / -1 }
+  .plate--right-low{ margin-top:20px }
   .topbar{ flex-direction:column; align-items:flex-start; gap:12px }
   .series{ gap:12px; overflow-x:auto; width:100%; padding-bottom:2px }
   .series button{ font-size:11px; letter-spacing:.12em; white-space:nowrap }
@@ -636,6 +683,12 @@ body{
     var btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'plate';
+    if (hasWork){
+      if (i === 0) btn.classList.add('plate--lead');
+      if (i === 1) btn.classList.add('plate--right');
+      if (i === 2) btn.classList.add('plate--right-low');
+      if (i === 3) btn.classList.add('plate--closing');
+    }
     btn.style.setProperty('--d', staggerDelay(i, series.slot) + 'ms');
     btn.setAttribute('aria-label', hasWork ? name : 'Empty slot');
 
