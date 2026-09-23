@@ -11,7 +11,7 @@
 /* ============================================================================
    Art Exhibition · MVP / S1 展示系统 v5
    ----------------------------------------------------------------------------
-   技术：单文件 HTML + CSS + 原生 JS + 异步 GSAP CDN
+   技术：单文件 HTML + CSS + 原生 JS + 本地 GSAP
    展示：展陈骨架（恒定）+ 环境随作品（变量）+ 语法（方言）—— DESIGN_V5 §4
 
    ★ 本步只做「恒定层 · 展陈骨架」，以及把容器从「自带材质」拉回「中性」：
@@ -31,21 +31,21 @@
 /* 展陈三层：墙 / 卡纸 / 墨。第 4 步将由作品取色生成（DESIGN_V5 §4.2）；
    在此之前给一组中性值，让骨架先站住。 */
 :root{
-  --wall:      #E7E1D6;                  /* 墙：中性米灰，不抢作品 */
-  --wall-deep: #DCD5C7;                  /* 墙的暗侧：聚焦遮罩 */
-  --mat:       #F7F4EE;                  /* 卡纸：比墙亮一档，把作品托起来 */
-  --ink:       #232019;                  /* 墨：文字与极少的线 */
-  --ink-2:     #555046;                  /* 第二墨：揭幕的第二道色块 */
-  --ink-soft:  rgba(35,32,25,.56);
-  --ink-faint: rgba(35,32,25,.32);
-  --accent:    #9A332B;
-  --accent-soft:rgba(154,51,43,.16);
-  --grain:     rgba(35,32,25,.10);
-  --ink-on-mat:#232019;
+  --wall:      #20292A;                  /* 主墙：矿石蓝绿 */
+  --wall-deep: #111819;                  /* 暗部：玄武岩 */
+  --mat:       #ECE9DF;                  /* 卡纸：未漂白的纤维纸 */
+  --ink:       #F0EEE6;                  /* 墨：墙上使用的浅色字 */
+  --ink-2:     #AAB6B1;                  /* 第二墨：冷灰绿 */
+  --ink-soft:  rgba(240,238,230,.68);
+  --ink-faint: rgba(240,238,230,.42);
+  --accent:    #C88A59;
+  --accent-soft:rgba(200,138,89,.16);
+  --grain:     rgba(236,233,223,.08);
+  --ink-on-mat:#242522;
 
-  /* 装裱：卡纸宽度 = 外框【短边】的 6%（DESIGN_V5 §4.1）
+  /* 装裱：收窄卡纸边缘，避免作品外缘叠出明显白框。
      —— CSS 的 padding 百分比正是按【宽度】计算的，所以这一条天生对齐 */
-  --mat-pad: 6%;
+  --mat-pad: .8%;
 
   /* 四条来自工序的曲线（PRD §6.5.4）——保留节拍骨架，名字改材质中性。
      全站禁用 ease / ease-in-out / 弹簧（AC-60）。 */
@@ -60,12 +60,12 @@
   --t-swap:   420ms;
 }
 
-body[data-theme="arcana"]{ --wall:#E7E1D6; --wall-deep:#D3CAB9; --mat:#F7F4EE; --ink:#232019; --ink-2:#4C4A43; --ink-soft:rgba(35,32,25,.56); --ink-faint:rgba(35,32,25,.32); --accent:#9A332B; --accent-soft:rgba(154,51,43,.16); --grain:rgba(35,32,25,.10); --ink-on-mat:#232019; }
-body[data-theme="sleight"]{ --wall:#DDE4DF; --wall-deep:#C6D2CB; --mat:#F4F6F0; --ink:#1D2925; --ink-2:#6E302B; --ink-soft:rgba(29,41,37,.58); --ink-faint:rgba(29,41,37,.34); --accent:#9A3E35; --accent-soft:rgba(154,62,53,.15); --grain:rgba(29,41,37,.09); --ink-on-mat:#1D2925; }
-body[data-theme="unreal"]{ --wall:#D9E1E7; --wall-deep:#C0CDD6; --mat:#F5F7F8; --ink:#1D2B36; --ink-2:#35616C; --ink-soft:rgba(29,43,54,.56); --ink-faint:rgba(29,43,54,.32); --accent:#B85D3F; --accent-soft:rgba(184,93,63,.16); --grain:rgba(29,43,54,.09); --ink-on-mat:#1D2B36; }
-body[data-theme="limbo"]{ --wall:#303233; --wall-deep:#202223; --mat:#E9E7DF; --ink:#F1EEE6; --ink-2:#A7A49A; --ink-soft:rgba(241,238,230,.62); --ink-faint:rgba(241,238,230,.38); --accent:#D79B55; --accent-soft:rgba(215,155,85,.18); --grain:rgba(241,238,230,.09); --ink-on-mat:#2B2C29; }
-body[data-theme="world-line"]{ --wall:#E2D6C5; --wall-deep:#CDBCA5; --mat:#F8F1E5; --ink:#273B3A; --ink-2:#4D6861; --ink-soft:rgba(39,59,58,.56); --ink-faint:rgba(39,59,58,.32); --accent:#A64A32; --accent-soft:rgba(166,74,50,.16); --grain:rgba(39,59,58,.10); --ink-on-mat:#273B3A; }
-body[data-theme="fifty-two"]{ --wall:#E5D6D1; --wall-deep:#CFBEB8; --mat:#FBF5F0; --ink:#33292A; --ink-2:#6A3F4B; --ink-soft:rgba(51,41,42,.56); --ink-faint:rgba(51,41,42,.32); --accent:#5D6E55; --accent-soft:rgba(93,110,85,.16); --grain:rgba(51,41,42,.09); --ink-on-mat:#33292A; }
+body[data-theme="arcana"]{ --wall:#20292A; --wall-deep:#111819; --mat:#ECE9DF; --ink:#F0EEE6; --ink-2:#AAB6B1; --ink-soft:rgba(240,238,230,.68); --ink-faint:rgba(240,238,230,.42); --accent:#C88A59; --accent-soft:rgba(200,138,89,.16); --grain:rgba(236,233,223,.08); --ink-on-mat:#242522; }
+body[data-theme="sleight"]{ --wall:#202825; --wall-deep:#111816; --mat:#ECE9DF; --ink:#F0EEE6; --ink-2:#B7C2B8; --ink-soft:rgba(240,238,230,.68); --ink-faint:rgba(240,238,230,.42); --accent:#B98267; --accent-soft:rgba(185,130,103,.16); --grain:rgba(236,233,223,.08); --ink-on-mat:#242522; }
+body[data-theme="unreal"]{ --wall:#20272C; --wall-deep:#11171B; --mat:#ECE9DF; --ink:#F0EEE6; --ink-2:#AABBC2; --ink-soft:rgba(240,238,230,.68); --ink-faint:rgba(240,238,230,.42); --accent:#79A4AE; --accent-soft:rgba(121,164,174,.16); --grain:rgba(236,233,223,.08); --ink-on-mat:#242522; }
+body[data-theme="limbo"]{ --wall:#252423; --wall-deep:#121313; --mat:#E9E7DF; --ink:#F1EEE6; --ink-2:#B6ADA0; --ink-soft:rgba(241,238,230,.68); --ink-faint:rgba(241,238,230,.42); --accent:#D79B55; --accent-soft:rgba(215,155,85,.18); --grain:rgba(236,233,223,.08); --ink-on-mat:#2B2C29; }
+body[data-theme="world-line"]{ --wall:#202726; --wall-deep:#111716; --mat:#ECE9DF; --ink:#F0EEE6; --ink-2:#ACBDB3; --ink-soft:rgba(240,238,230,.68); --ink-faint:rgba(240,238,230,.42); --accent:#86A797; --accent-soft:rgba(134,167,151,.16); --grain:rgba(236,233,223,.08); --ink-on-mat:#242522; }
+body[data-theme="fifty-two"]{ --wall:#2A2426; --wall-deep:#171315; --mat:#ECE9DF; --ink:#F0EEE6; --ink-2:#C1AEB2; --ink-soft:rgba(240,238,230,.68); --ink-faint:rgba(240,238,230,.42); --accent:#BE8589; --accent-soft:rgba(190,133,137,.16); --grain:rgba(236,233,223,.08); --ink-on-mat:#242522; }
 
 /* ---------- 2 · 基础 ---------- */
 
@@ -83,27 +83,123 @@ body{
   transition:background-color 480ms var(--c-press), color 480ms var(--c-press);
 }
 
-::selection{background:var(--ink);color:var(--wall)}
+::selection{background:var(--accent);color:var(--wall-deep)}
 
 /* ---------- 3 · 墙层（恒定，全程零位移） ---------- */
 
-/* 墙不是背景色，是一面墙。它铺极淡的颗粒，且【全程不动】——
-   因为 60-30-10 说的是：占了 60% 的东西，不许动（PRD §6.5.1） */
+/* 地平线、校准圆与网格借用测绘版式；动态只留给低对比线层。 */
 .wall{
   position:fixed; inset:0; z-index:0; pointer-events:none;
-  background-color:var(--wall);
+  background-color:#F0EFEA;
+  background-image:
+    radial-gradient(ellipse at 50% 50%, transparent 30%, rgba(7,10,10,.24) 100%),
+    linear-gradient(180deg,#0D1010 0%,#171A1A 22%,#3A4140 30%,#A6AAA5 37%,#E8E8E2 46%,#F4F3EF 100%);
   transition:background-color 480ms var(--c-press);
 }
+.wall::before{
+  content:"";
+  position:absolute; inset:-4%;
+  background-image:
+    repeating-radial-gradient(ellipse at 50% 47%, transparent 0 8px, rgba(35,40,39,.075) 8.5px, transparent 9px 17px),
+    radial-gradient(circle at 50% 54%, transparent 0 10.8%, rgba(35,40,39,.32) 10.9% 11%, transparent 11.1% 15.8%, rgba(35,40,39,.26) 15.9% 16%, transparent 16.1% 21.8%, rgba(35,40,39,.2) 21.9% 22%, transparent 22.1%),
+    repeating-linear-gradient(90deg, transparent 0 71px, rgba(35,40,39,.095) 72px, transparent 73px),
+    repeating-linear-gradient(0deg, transparent 0 71px, rgba(35,40,39,.085) 72px, transparent 73px),
+    linear-gradient(90deg, transparent calc(50% - .5px), rgba(35,40,39,.32) 50%, transparent calc(50% + .5px)),
+    linear-gradient(0deg, transparent calc(46% - .5px), rgba(35,40,39,.3) 46%, transparent calc(46% + .5px)),
+    linear-gradient(128deg, transparent 49.94%, rgba(35,40,39,.22) 50%, transparent 50.06%),
+    linear-gradient(232deg, transparent 49.94%, rgba(35,40,39,.2) 50%, transparent 50.06%);
+  animation:diagramDrift 72s cubic-bezier(.37,0,.63,1) infinite alternate;
+}
 .wall::after{
-  /* 墙面颗粒：极淡的一层噪点，用 SVG 滤镜生成，零外部请求。
-     注意：这不是网点（网点是印刷物证，已随容器一起降级），只是让墙面有颗粒感。 */
+  /* 极细的纸面颗粒，避免浅色区域像发光的数字渐变。 */
   content:"";
   position:absolute; inset:0;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)' opacity='0.5'/%3E%3C/svg%3E");
-  opacity:.10;
-  background-color:var(--grain);
+  opacity:.045;
   mix-blend-mode:multiply;
 }
+@keyframes diagramDrift{to{transform:translate3d(1.2%,.7%,0)}}
+.wall-tech{
+  position:fixed; inset:0; z-index:1; pointer-events:none; overflow:hidden;
+  opacity:.72;
+}
+.wall-tech i{ position:absolute; display:block; font-style:normal; }
+.wall-tech .geo-frame{
+  left:4%; top:19%; width:23vw; height:25vh; min-width:180px; min-height:150px;
+  border:1px solid rgba(230,233,226,.3);
+  box-shadow:7px 7px 0 -6px rgba(230,233,226,.45), 14px 14px 0 -13px rgba(25,30,29,.5);
+  transform:rotate(-7deg);
+}
+.wall-tech .geo-frame::before,.wall-tech .geo-frame::after{
+  content:"";position:absolute;width:8px;height:8px;border:1px solid currentColor;color:rgba(230,233,226,.65)
+}
+.wall-tech .geo-frame::before{left:-5px;top:-5px}.wall-tech .geo-frame::after{right:-5px;bottom:-5px}
+.wall-tech .geo-diagonal{
+  left:14%;top:13%;width:1px;height:76%;
+  background:linear-gradient(transparent,rgba(230,233,226,.65) 20%,rgba(35,40,39,.35) 51%,rgba(230,233,226,.25) 78%,transparent);
+  transform:rotate(34deg);transform-origin:center;
+}
+.wall-tech .geo-ring{
+  left:49%;top:33%;width:34vw;aspect-ratio:1;border:1px solid rgba(35,40,39,.34);border-radius:50%;
+  box-shadow:0 0 0 22px rgba(35,40,39,.07),0 0 0 54px rgba(35,40,39,.045);
+  transform:translate(-50%,-50%);animation:ringDrift 36s ease-in-out infinite alternate;
+}
+.wall-tech .geo-ring::before,.wall-tech .geo-ring::after{content:"";position:absolute;inset:13%;border:1px solid rgba(35,40,39,.24);border-radius:50%}
+.wall-tech .geo-ring::after{inset:28%;border-style:dashed}
+.wall-tech .display-type{
+  position:absolute;left:4.2%;top:25%;display:block;color:rgba(241,241,235,.76);
+  font:800 clamp(54px,7.2vw,104px)/.76 Arial,sans-serif;letter-spacing:0;
+  text-transform:uppercase;text-shadow:3px 0 rgba(194,78,65,.52),-3px 0 rgba(95,154,153,.42);
+  mix-blend-mode:screen;transform:translateX(-5px) skewY(-3deg);opacity:.66;
+}
+.wall-tech .display-type span{display:block}
+.wall-tech .display-type span+span{margin-left:22px;color:rgba(241,241,235,.38);transform:translateX(13px)}
+.wall-tech .signal{
+  position:absolute;color:rgba(230,233,226,.65);font:600 9px/1.5 ui-monospace,monospace;letter-spacing:.18em;
+  text-shadow:1px 0 rgba(194,78,65,.6),-1px 0 rgba(95,154,153,.55);white-space:nowrap;
+}
+.wall-tech .signal-a{left:3%;top:31%;transform:rotate(-90deg);transform-origin:left top}
+.wall-tech .signal-b{right:4%;top:17%;color:rgba(35,40,39,.56);transform:translateX(2px)}
+.wall-tech .signal-c{left:30%;bottom:12%;color:rgba(35,40,39,.52);transform:skewX(-11deg)}
+.wall-tech .network{
+  position:absolute;left:0;right:0;top:14%;width:100%;height:76%;overflow:visible;
+}
+.wall-tech .network path,.wall-tech .network line{fill:none;stroke:rgba(35,40,39,.28);stroke-width:.7;vector-effect:non-scaling-stroke}
+.wall-tech .network .accent{stroke:rgba(234,237,229,.55);stroke-dasharray:2 5;animation:signalFlow 24s linear infinite}
+.wall-tech .network circle{fill:#D0D2CA;stroke:rgba(35,40,39,.56);stroke-width:1;vector-effect:non-scaling-stroke}
+.wall-tech .scan-x{
+  left:-10vw; right:-10vw; top:18%; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.7) 18%, rgba(30,34,33,.18) 58%, transparent);
+  transform:translateX(-18vw);
+  animation:scanHorizontal 38s cubic-bezier(.37,0,.63,1) infinite alternate;
+}
+.wall-tech .scan-y{
+  top:-10vh; bottom:-10vh; left:72%; width:1px;
+  background:linear-gradient(180deg, transparent, rgba(255,255,255,.48) 24%, rgba(30,34,33,.18) 78%, transparent);
+  transform:translateY(12vh);
+  animation:scanVertical 47s cubic-bezier(.37,0,.63,1) infinite alternate;
+}
+.wall-tech .crosshair{
+  left:50%; top:54%; width:24px; height:24px;
+  border:1px solid rgba(35,40,39,.3);
+  transform:rotate(45deg) scale(.86);
+  animation:calibrationPulse 8s cubic-bezier(.37,0,.63,1) infinite;
+}
+.wall-tech .crosshair::before,
+.wall-tech .crosshair::after{ content:""; position:absolute; background:rgba(35,40,39,.3); }
+.wall-tech .crosshair::before{ left:50%; top:-7px; width:1px; height:38px; }
+.wall-tech .crosshair::after{ top:50%; left:-7px; height:1px; width:38px; }
+.wall-tech .arc{
+  left:50%; top:54%; width:28vw; aspect-ratio:1; border:1px solid rgba(35,40,39,.16);
+  border-radius:50%; transform:scale(.72); opacity:.58;
+  animation:arcBreath 12s cubic-bezier(.37,0,.63,1) infinite alternate;
+}
+@keyframes scanHorizontal{ to{ transform:translateX(20vw) } }
+@keyframes scanVertical{ to{ transform:translateY(-13vh) } }
+@keyframes calibrationPulse{ 0%,100%{ opacity:.42; transform:rotate(45deg) scale(.82) } 50%{ opacity:.8; transform:rotate(45deg) scale(1) } }
+@keyframes arcBreath{ to{ transform:scale(.82); opacity:.82 } }
+@keyframes ringDrift{to{transform:translate(-50%,-50%) scale(1.06) rotate(9deg)}}
+@keyframes signalFlow{to{stroke-dashoffset:-70}}
 
 /* ---------- 4 · 揭幕（F-01） ---------- */
 
@@ -116,7 +212,7 @@ body{
 }
 .unveil.done{opacity:0; pointer-events:none}
 
-/* 幕布：GSAP 接手后从上下向中线合拢；未载入时由静态降级直接揭开展场。 */
+/* 入场幕布：先完整覆盖展场，再由 GSAP 向上下展开。 */
 .unveil-press{
   position:absolute; inset:0; display:flex; flex-direction:column;
 }
@@ -131,10 +227,10 @@ body{
 /* 上幕：主墨 60% */
 .curtain.top i{ top:0; background:var(--ink) }
 /* 下幕：第二墨 30%，整块向左偏 3px —— 两道版没对准的痕（形，不是装饰） */
-.curtain.bottom i{ top:0; background:var(--ink-2); transform:translateX(-3px) }
+.curtain.bottom i{ top:0; background:var(--ink); transform:translateX(-3px) }
 
-.curtain.top  { transform:translateY(-50%) }
-.curtain.bottom{ transform:translateY(50%) }
+.curtain.top  { transform:translateY(0) }
+.curtain.bottom{ transform:translateY(0) }
 
 /* 走位 720ms 走到中线；高光 120ms 压死；余下 360ms 静止（收束交给字标与展场） */
 @keyframes shutTop{
@@ -161,9 +257,9 @@ body{
   display:block;
   font-size:clamp(20px,4.4vw,40px);
   font-weight:700; letter-spacing:.30em;
-  color:var(--wall);
+  color:var(--mat);
   text-indent:.30em;                   /* 抵消末字的字距，视觉居中 */
-  mix-blend-mode:difference;           /* 骑在两道墨上，都能读清 */
+  mix-blend-mode:normal;
 }
 @keyframes markPress{
   0%,59%   { opacity:0; transform:scaleY(.06) translateY(6px); filter:blur(3px) }
@@ -173,7 +269,7 @@ body{
 }
 
 .unveil-line{
-  position:absolute; left:50%; top:50%;
+  position:absolute; left:50%; top:58%;
   width:min(320px,54vw); height:1px;
   background:var(--wall); opacity:.55;
   transform:translate(-50%,-50%) scaleX(0);
@@ -186,7 +282,7 @@ body{
   100%     { transform:translate(-50%,-50%) scaleX(1) }
 }
 
-/* 跳过和 CDN 降级：移除幕布，直接露出已经渲染好的展场。 */
+/* 跳过或动效降级：移除幕布，直接露出已经渲染好的展场。 */
 .unveil.skip .curtain{ transform:translateY(0) }
 .unveil.skip .unveil-mark{ opacity:1; transform:none }
 .unveil.skip .unveil-line{ transform:translate(-50%,-50%) scaleX(1) }
@@ -197,7 +293,7 @@ body{
 
 /* 顶部常驻：站名 + 主题导航（= 一级导航，唯一入口 — DESIGN_V5 §2.1） */
 .topbar{
-  position:fixed; top:0; left:0; right:0; z-index:20;
+  position:absolute; top:0; left:0; right:0; z-index:20;
   display:flex; align-items:center; justify-content:space-between; gap:24px;
   padding:22px clamp(24px,6vw,96px);
   background:transparent;
@@ -239,46 +335,84 @@ body{
 }
 
 /* 序厅标题和作品墙共用同一条边界，让标题成为展览入口而非宣传横幅。 */
-.exhibition-head{
-  max-width:1480px;
-  margin:0 auto;
-  padding:112px clamp(24px,6vw,96px) 26px;
+.floor{
+  min-height:100svh;
   display:grid;
-  grid-template-columns:minmax(0,1fr) minmax(220px,340px);
-  align-items:end;
-  gap:32px;
-  border-bottom:1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+  grid-template-rows:auto;
+  grid-template-columns:minmax(250px,.62fr) minmax(0,1.38fr);
+  align-items:stretch;
+  max-width:1720px;
+  margin:0 auto;
+}
+.exhibition-head{
+  --ink:#232827;
+  --ink-soft:rgba(35,40,39,.72);
+  --ink-faint:rgba(35,40,39,.52);
+  --accent:#79572F;
+  grid-column:1;
+  grid-row:1;
+  position:relative;
+  min-height:calc(100svh - 78px);
+  min-height:0;
+  padding:clamp(130px,18vh,190px) clamp(28px,5vw,76px) 90px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:flex-start;
+  border-right:1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+}
+.exhibition-head::before{
+  content:"";
+  position:absolute;
+  top:82px; left:clamp(28px,5vw,76px);
+  width:34px; height:4px;
+  background:var(--accent);
+}
+.exhibition-head::after{
+  content:"01";
+  position:absolute;
+  left:clamp(28px,5vw,76px); bottom:26px;
+  font-size:11px; font-weight:600; letter-spacing:.18em;
+  color:var(--ink-faint);
 }
 .exhibition-kicker{
-  margin-bottom:13px;
-  font-size:10px; font-weight:600; letter-spacing:.2em;
+  margin-bottom:22px;
+  font-size:10px; font-weight:600; letter-spacing:.24em;
   color:var(--accent);
 }
 .exhibition-title{
-  font-size:64px; line-height:.96; font-weight:600; letter-spacing:.04em;
+  max-width:100%;
+  overflow-wrap:anywhere;
+  font-size:clamp(42px,4.3vw,60px); line-height:.94; font-weight:600; letter-spacing:.04em;
   color:var(--ink);
 }
 .exhibition-note{
-  max-width:290px;
-  padding-bottom:4px;
-  font-size:13px; line-height:1.65;
+  max-width:260px;
+  margin-top:34px;
+  padding-top:20px;
+  border-top:1px solid color-mix(in srgb, var(--ink) 22%, transparent);
+  font-size:13px; line-height:1.7;
   color:var(--ink-soft);
 }
 .exhibition-index{
   display:block;
-  margin-top:11px;
+  margin-top:16px;
   font-size:10px; font-weight:600; letter-spacing:.18em;
   color:var(--ink-faint);
 }
 
-/* 展墙采用 12 列编辑网格：主作先建立重量，辅助作分层回应，末作收束。 */
+/* 两列等宽展位让每张印张拥有一致的展示尺度。 */
 .grid{
+  grid-column:2;
+  grid-row:1;
+  min-width:0;
+  height:auto;
   display:grid;
-  grid-template-columns:repeat(12,minmax(0,1fr));
-  gap:clamp(34px,5vw,84px) clamp(18px,2.4vw,42px);
-  max-width:1480px;
-  margin:0 auto;
-  padding:30px clamp(24px,6vw,96px) 140px;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-auto-rows:auto;
+  gap:34px clamp(18px,2.4vw,36px);
+  align-content:start;
+  padding:96px clamp(24px,4vw,64px) 88px clamp(22px,3vw,46px);
   align-items:start;
 }
 
@@ -290,7 +424,7 @@ body{
 .plate{
   position:relative;
   display:flex; flex-direction:column;
-  grid-column:span 3;
+  grid-column:auto;
   width:100%; aspect-ratio:2/3;               /* 外框比例，不裁切不变形 */
   border:0; padding:0; background:none; cursor:pointer;
   text-align:center; font:inherit; color:inherit;
@@ -300,23 +434,16 @@ body{
 }
 .plate.in{ opacity:1; transform:none }
 
-/* 编辑型展墙：第一张作品承担入口重量，后两张形成不等高呼吸，
-   最后一张回到中轴，保留系列的收束感。只对有作品的主题加这些类。 */
+/* 保留策展语义类，但视觉尺寸统一由展位网格决定。 */
 .plate--lead{
-  grid-column:span 5;
+  grid-column:auto;
+  grid-row:auto;
+  align-self:initial;
+  width:100%;
+  height:auto;
+  aspect-ratio:2/3;
 }
-.plate--right{ grid-column:7 / span 3 }
-.plate--right-low{ grid-column:10 / span 3 }
-.plate--right{
-  margin-top:clamp(20px,4vw,64px);
-}
-.plate--right-low{
-  margin-top:clamp(46px,9vw,132px);
-}
-.plate--closing{
-  grid-column:5 / span 4;
-  margin-top:clamp(18px,4vw,56px);
-}
+.plate--right,.plate--right-low,.plate--closing{grid-column:auto;grid-row:auto;margin-top:0}
 .plate--lead .mat{
   box-shadow:
     inset 0 0 0 .5px rgba(35,32,25,.14),
@@ -327,6 +454,7 @@ body{
 
 /* —— 装裱区：卡纸（外框短边的 6%）—— */
 .mat{
+  position:relative;
   flex:1; min-height:0;                        /* 弹性占满除铭牌外的全部高度 */
   padding:var(--mat-pad);                      /* 卡纸：四周等宽 */
   background:var(--mat);
@@ -351,8 +479,21 @@ body{
   display:block;
   width:100%; height:100%;
   object-fit:contain;                          /* 零裁切（AC-26） */
+  transform:scale(1.08);                       /* 收掉素材自带的浅色外圈；文件本身不裁切 */
   /* 作品自身的一层薄影：把「这一张」从卡纸上托起来 */
   box-shadow:0 1px 0 rgba(35,32,25,.10), 0 14px 28px -22px rgba(35,32,25,.55);
+}
+.press-mark{
+  position:absolute;
+  z-index:2;
+  left:6%; right:6%; top:50%; height:1px;
+  display:block;
+  background:var(--accent);
+  box-shadow:0 0 10px color-mix(in srgb, var(--accent) 52%, transparent);
+  transform:scaleX(0);
+  transform-origin:left center;
+  opacity:0;
+  pointer-events:none;
 }
 
 /* —— 空装裱：还没挂上作品的展位。虚线的框，不说话。——
@@ -440,37 +581,24 @@ body{
   position:absolute; inset:0;
   padding:var(--mat-pad);
   display:flex; align-items:center; justify-content:center;
+  will-change:transform,opacity;
 }
 .focus-art .layer img{
   display:block; width:100%; height:100%;
   object-fit:contain;
+  transform:scale(1.08);
   box-shadow:0 1px 0 rgba(35,32,25,.10), 0 14px 28px -22px rgba(35,32,25,.55);
 }
 
-/* —— 换印 · 显影语法「刷子刷出」（DESIGN_V5 §3 // D6）——
-   ★ 原来的「错版对位」已整体退场：它在显影中途露的是【错的颜色】（重影 / 彩边），
-     柔和的作品一上就被照成显像管故障。刷子是【累积性】显影 ——
-     颜色从头到尾都是对的，观众看到的只是「位置还没到」。
-   节拍沿用 §6.5：走位 60% / 收束 30%（见 buildBrush 的错峰计算），
-   最后一格用 --c-press 快起急停收笔 = 那 10% 的高光，只此一次。
-
-   ★ 为什么是「一条条退」而不是「一条条画」：
-     遮蔽层铺在作品【上面】、用卡纸色，退开一格就亮出一格 ——
-     全程只挡不改，不碰画面像素，所以对任何色彩风格都安全。 */
-.brush{
-  position:absolute; inset:0;              /* 盖满整个装裱框：卡纸色盖卡纸，看不出多盖了 */
-  overflow:hidden; pointer-events:none;    /* 裁掉最后一格伸出去的部分 */
+/* 作品临时影像：切换时在展墙卡位与焦点画框之间进行真实空间补间。 */
+.focus-flight{
+  position:fixed;left:0;top:0;z-index:70;
+  display:flex;align-items:center;justify-content:center;
+  padding:0;overflow:hidden;background:transparent;
+  pointer-events:none;will-change:transform,width,height,opacity;
 }
-.brush i{
-  position:absolute; top:-1px; bottom:-1px; display:block;
-  background:var(--mat);
-  transform-origin:right center;           /* 收刷：向左退，画面从左往右亮出来 */
-  animation:brushSeg var(--t-swap) var(--c-squeegee) var(--delay, 0ms) both;
-}
-@keyframes brushSeg{
-  0%  { transform:scaleX(1) }
-  100%{ transform:scaleX(0) }
-}
+.focus-flight img{display:block;width:100%;height:100%;object-fit:contain;transform:scale(1.08);box-shadow:0 14px 28px -22px rgba(35,32,25,.7)}
+.focus-art.is-moving .layer{visibility:hidden}
 
 .focus-info{ display:flex; flex-direction:column; gap:10px; min-width:220px; max-width:320px }
 .focus-name{
@@ -537,29 +665,42 @@ body{
 /* ---------- 9 · 响应式（AC-27） ---------- */
 
 @media (max-width:1279px){
-  .grid{ grid-template-columns:repeat(6,minmax(0,1fr)) }
-  .exhibition-head{ padding-left:6vw; padding-right:6vw }
-  .plate{ grid-column:span 2 }
-  .plate--lead{ grid-column:span 4 }
-  .plate--right,
-  .plate--right-low{ grid-column:span 2 }
-  .plate--closing{ grid-column:3 / span 2 }
-  .grid, .topbar, .focus{ padding-left:6vw; padding-right:6vw }
+  .floor{ grid-template-columns:minmax(230px,.62fr) minmax(0,1.38fr) }
+  .grid{ grid-template-columns:repeat(2,minmax(0,1fr)); padding-left:20px; padding-right:22px; gap:28px 20px }
+  .topbar{ padding-left:32px; padding-right:32px }
 }
 @media (max-width:767px){
+  .floor{ display:flex; min-height:100svh; flex-direction:column }
+  .wall-tech{opacity:.5}
+  .wall-tech .geo-frame{left:6%;top:19%;width:42vw;height:15vh;min-width:0;min-height:0}
+  .wall-tech .geo-ring{left:50%;top:39%;width:72vw}
+  .wall-tech .geo-diagonal{left:20%;height:50%}
+  .wall-tech .display-type{display:none}
+  .wall-tech .signal-a{top:39%}
+  .wall-tech .signal-b{top:26%;right:5%;font-size:7px}
+  .wall-tech .signal-c{bottom:5%;left:5%;font-size:7px}
+  .wall-tech .network{top:20%;height:56%}
   .exhibition-head{
-    grid-template-columns:1fr;
-    gap:12px;
-    padding:132px 24px 20px;
+    --ink:#F0EEE6;
+    --ink-soft:rgba(240,238,230,.72);
+    --ink-faint:rgba(240,238,230,.5);
+    --accent:#C88A59;
+    grid-column:auto;
+    grid-row:auto;
+    height:auto;
+    min-height:0;
+    padding:150px 26px 25px;
+    border-right:0;
+    border-bottom:1px solid color-mix(in srgb, var(--ink) 18%, transparent);
   }
-  .exhibition-title{ font-size:48px }
-  .exhibition-note{ max-width:30em; font-size:12px }
-  .grid{ grid-template-columns:repeat(2,minmax(0,1fr)); padding-top:24px; gap:26px 16px }
-  .plate,
-  .plate--lead,
-  .plate--closing{ grid-column:span 1; margin-top:0 }
-  .plate--lead{ grid-column:1 / -1 }
-  .plate--right-low{ margin-top:20px }
+  .exhibition-head::before{ top:112px; left:26px; width:26px; height:3px }
+  .exhibition-head::after{ right:26px; left:auto; bottom:27px }
+  .exhibition-kicker{ margin-bottom:14px }
+  .exhibition-title{ font-size:48px; line-height:.96 }
+  .exhibition-note{ max-width:30em; margin-top:17px; padding-top:12px; font-size:12px }
+  .exhibition-index{ margin-top:9px }
+  .grid{ grid-column:auto; grid-row:auto; height:auto; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:auto; padding:24px 22px 72px; gap:24px 14px }
+  .plate,.plate--lead,.plate--right,.plate--right-low,.plate--closing{grid-column:auto;grid-row:auto;width:100%;height:auto;aspect-ratio:2/3;margin:0}
   .topbar{ flex-direction:column; align-items:flex-start; gap:12px }
   .series{ gap:4px 14px; flex-wrap:wrap; overflow:visible; width:100%; padding-bottom:2px }
   .series button{ font-size:11px; letter-spacing:.12em; white-space:nowrap }
@@ -569,12 +710,17 @@ body{
   .nav-btn{ top:auto; bottom:24px; transform:none }
 }
 
+@media (prefers-reduced-motion:no-preference){
+  .plate--lead .win{ clip-path:inset(0 0 0 0) }
+}
+
 /* ---------- 10 · 减少动态效果（AC-39 / AC-69） ---------- */
 
 /* 退化为「只保留高光帧与终态，删掉全部走位」——
    一屏的 60%（走位）与 30%（收束）归零，只留下那 10%。 */
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
+  .wall,.wall::before,.wall-tech i,.wall-tech .network .accent{animation:none !important}
   .curtain.top,
   .curtain.bottom{ animation:none; transform:translateY(0) }
   .unveil-mark{ animation:none; opacity:1 }
@@ -585,8 +731,7 @@ body{
   .plate.stagger, .plate.leaving{ animation:none !important }
 
   .series button[aria-selected="true"]::after{ animation:none }
-  /* 减少动态：刷子不播出 —— 作品直接呈现终态（DESIGN_V5 §3.4） */
-  .brush{ display:none }
+  .focus-flight{ display:none }
   .plate .mat{ transition-duration:0ms }
 }
 </style>
@@ -595,6 +740,26 @@ body{
 
 <!-- 墙层：全程零位移 -->
 <div class="wall" aria-hidden="true"></div>
+<div class="wall-tech" aria-hidden="true">
+  <i class="scan-x"></i><i class="scan-y"></i><i class="crosshair"></i><i class="arc"></i>
+  <i class="geo-frame"></i><i class="geo-diagonal"></i><i class="geo-ring"></i>
+  <b class="display-type"><span>THE</span><span>GATE</span></b>
+  <span class="signal signal-a">X-07 // Δ 03 : 71.4°</span>
+  <span class="signal signal-b">NO. 04 / FIELD TRACE</span>
+  <span class="signal signal-c">φ 1.618 / AXIS 02 / 2026</span>
+  <svg class="network" viewBox="0 0 1440 820" preserveAspectRatio="none">
+    <path d="M0 170L238 170L372 302L565 302L721 126L936 126L1112 286L1440 286"/>
+    <path d="M0 584L188 584L350 432L534 432L721 626L884 626L1067 468L1260 468L1440 558"/>
+    <path class="accent" d="M238 170L350 432L565 302L721 626L936 126L1067 468L1112 286"/>
+    <path d="M372 302L372 92L565 92L565 302M884 626L884 738L1112 738L1112 286"/>
+    <circle cx="238" cy="170" r="4"/><circle cx="372" cy="302" r="5"/>
+    <circle cx="565" cy="302" r="3"/><circle cx="721" cy="126" r="6"/>
+    <circle cx="721" cy="626" r="4"/><circle cx="936" cy="126" r="3"/>
+    <circle cx="1067" cy="468" r="5"/><circle cx="1112" cy="286" r="4"/>
+    <rect x="230" y="162" width="16" height="16" fill="none" stroke="rgba(35,40,39,.45)"/>
+    <rect x="1103" y="277" width="18" height="18" fill="none" stroke="rgba(35,40,39,.45)"/>
+  </svg>
+</div>
 
 <!-- ===== 揭幕 F-01：画面上只能有色块、字标、细线三样（AC-02）===== -->
 <div class="unveil" id="unveil">
@@ -648,10 +813,6 @@ body{
   </button>
 </section>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js" async></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/Flip.min.js" async data-gsap-plugin="Flip"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js" async data-gsap-plugin="ScrollTrigger"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/CustomEase.min.js" async data-gsap-plugin="CustomEase"></script>
 <script>
 (function(){
   'use strict';
@@ -698,7 +859,9 @@ body{
   var focusArt  = $('#focusArt');
   var unveil    = $('#unveil');
   var unveilTimeline = null;
+  var galleryTimeline = null;
   var unveilEnded = false;
+  var galleryRevealed = false;
 
   /* 自绘三次贝塞尔缓动；不用 GSAP 预设曲线，避免模板化的回弹感。 */
   function cubicBezier(x1, y1, x2, y2){
@@ -817,7 +980,7 @@ body{
       matHTML =
         '<span class="mat">' +
           '<span class="win">' +
-            '<img src="' + work.img + '" alt="' + name + '" loading="lazy">' +
+            '<img src="' + work.img + '" alt="' + name + '" loading="' + (i === 0 ? 'eager' : 'lazy') + '">' +
           '</span>' +
         '</span>' +
         '<span class="meta">' +
@@ -839,6 +1002,12 @@ body{
     }
 
     btn.innerHTML = matHTML;
+    if (hasWork && i === 0){
+      var pressMark = document.createElement('span');
+      pressMark.className = 'press-mark';
+      pressMark.setAttribute('aria-hidden', 'true');
+      btn.querySelector('.mat').appendChild(pressMark);
+    }
     if (hasWork) btn.addEventListener('click', function(){ openFocus(i); });
     else btn.disabled = true;
 
@@ -937,56 +1106,50 @@ body{
      · ★ 关键性质：遮蔽层只挡不改、不碰画面像素 → 对任何色彩风格都安全
        （这正是它比「错版」稳的地方：柔和的作品不会被照成故障画面）
      ====================================================================== */
-  var BRUSH_T = 420;                        /* 整套刷子走完 = --t-swap */
-
-  function buildBrush(layer){
-    var brush = document.createElement('span');
-    brush.className = 'brush';
-    brush.setAttribute('aria-hidden', 'true');
-    layer.appendChild(brush);               /* 先入 DOM，才量得到真实宽度 */
-
-    /* 段数按画心窗实际尺寸换算（示意值 9 段 × 20px，DESIGN_V5 §3.4） */
-    var n = Math.max(8, Math.min(14, Math.round(brush.clientWidth / 46)));
-    var W = 100 / n;                        /* 一段 = 画心窗宽的 1/n（%） */
-
-    /* ★ 错峰步进有个【下限】，不是调小就更快：
-       每条跟左邻叠 35%（为了静止时盖满、并压住前沿的羽化边），
-       于是某条一旦退到 scaleX < 0.74，它的左沿就越过了左邻的右沿，
-       中间那块「两不管」地带会【漏出画面】—— 表现为一道道细竖缝，像画面被切碎。
-       所以立一条纪律：左邻没撤完，这一条不许退穿。MARGIN = 0.78 就是它（留 0.04 余量），
-       步进只能比它大。这是靠截图才发现的 —— 代码全程没报错。 */
-    var MARGIN = 0.78;
-    var dur    = (BRUSH_T - 20) / (1 + (n - 1) * MARGIN);   /* 单条刷痕的走位时间 */
-    var step   = dur * MARGIN;                              /* 错峰步进（安全下限之上） */
-
-    for (var i = 0; i < n; i++){
-      var s = document.createElement('i');
-      s.style.left  = (i * W) + '%';
-      s.style.width = (W * 1.35) + '%';
-      /* 与前一条叠 35%（> 前沿羽化的 22%）：静止时盖得严，不会提前漏出画面 */
-      if (i > 0){
-        s.style.background =
-          'linear-gradient(' + (96 + Math.round(Math.random() * 8)) + 'deg,' +
-          ' color-mix(in srgb, var(--mat) 0%, transparent) 0,' +
-          ' var(--mat) 22%)';
-      }
-      /* 抖动只许【往后】加：往前加就等于把步进压到下限以下，缝又会回来 */
-      s.style.setProperty('--delay',
-        Math.round(i * step + (i > 0 ? Math.random() * 14 : 0)) + 'ms');
-      s.style.animationDuration = dur + 'ms';
-      /* 最后一格快起急停 = 收笔（那 10% 的高光，只此一次） */
-      if (i === n - 1) s.style.animationTimingFunction = 'var(--c-press)';
-      brush.appendChild(s);
-    }
-    return brush;
+  /* ========================================================================
+     聚焦 F-05 · GSAP 空间补间
+     ====================================================================== */
+  var focusMotion = null;
+  function matRect(index){
+    var card = $$('.plate')[index];
+    var mat = card && card.querySelector('.mat');
+    if (!mat) return null;
+    var rect = mat.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    return { left:rect.left, top:rect.top, width:rect.width, height:rect.height };
+  }
+  function rectOnScreen(rect){
+    return !!rect && rect.left + rect.width > 0 && rect.left < window.innerWidth &&
+      rect.top + rect.height > 0 && rect.top < window.innerHeight;
+  }
+  function createFocusFlight(work, from, to){
+    var flight = document.createElement('div');
+    flight.className = 'focus-flight';
+    flight.setAttribute('aria-hidden', 'true');
+    var image = document.createElement('img');
+    image.src = work.img;
+    image.alt = '';
+    flight.appendChild(image);
+    document.body.appendChild(flight);
+    flight.style.padding = (from.width * .008) + 'px';
+    window.gsap.set(flight, {
+      left:to.left, top:to.top, width:to.width, height:to.height,
+      transformOrigin:'0 0',
+      x:from.left - to.left, y:from.top - to.top,
+      scaleX:from.width / to.width, scaleY:from.height / to.height
+    });
+    return flight;
+  }
+  function clearFocusMotion(){
+    if (focusMotion){ focusMotion.kill(); focusMotion = null; }
+    $$('.focus-flight').forEach(function(flight){ flight.remove(); });
+    focusArt.classList.remove('is-moving');
+    focusEl.style.opacity = '';
+    focusArt.style.opacity = '';
+    focusArt.querySelectorAll('.layer').forEach(function(layer){ layer.style.visibility = ''; });
   }
 
-  /* ========================================================================
-     聚焦 F-05
-     ====================================================================== */
-  function paintFocus(i, dir){
-    /* dir 参数保留但【不再使用】：刷子是单方向推进（左→右，DESIGN_V5 §3.2），
-       方向感交给错峰节奏，不再靠左右位移表达 —— 那是旧「对位」语法的残影。 */
+  function paintFocus(i, keepPrevious){
     var works = state.series.works;
     var w     = works[i];
     if (!w) return;
@@ -995,24 +1158,14 @@ body{
     layer.className = 'layer';
     layer.innerHTML = '<img src="' + w.img + '" alt="' + w.name + '">';
 
-    var olds = $$('#focusArt .layer');       /* 先取旧层，再把新层压上去 */
+    var olds = $$('#focusArt .layer');
     focusArt.appendChild(layer);
-
-    if (!REDUCED){
-      var brush = buildBrush(layer);
-      window.setTimeout(function(){
-        /* 刷满即定：遮蔽层撤干净，之后不留残余动作（DESIGN_V5 §3.2「结束」） */
-        if (brush.parentNode) brush.parentNode.removeChild(brush);
-        olds.forEach(function(o){ if (o.parentNode) o.parentNode.removeChild(o); });
-      }, BRUSH_T + 60);
-    } else {
-      /* 减少动态：不播出刷子，旧层直接让位 */
-      olds.forEach(function(o){ if (o.parentNode) o.parentNode.removeChild(o); });
-    }
+    if (!keepPrevious) olds.forEach(function(old){ old.remove(); });
 
     $('#focusName').textContent   = w.name;
     $('#focusSeries').textContent = state.series.name;
     $('#focusCount').textContent  = 'No. ' + pad(i + 1) + ' / ' + pad(works.length);
+    return layer;
   }
 
   /* 关闭后回到原位（AC-37）用的滚动位置 */
@@ -1026,69 +1179,153 @@ body{
 
     /* ★ FLIP：先量出网格里那张卡的屏幕矩形，再让聚焦大图从那个矩形「长出来」。
        这就是 AC-34 要求的「从网格原位放大移入」，而不是黑底弹图。 */
-    var srcCard = $$('.plate')[i];
-    var first = srcCard ? srcCard.querySelector('.mat').getBoundingClientRect() : null;
+    var origin = matRect(i);
+    var sourceCard = $$('.plate')[i];
 
     focusEl.classList.add('open');
     document.body.style.overflow = 'hidden';
     focusArt.innerHTML = '';
-
-    if (first && !REDUCED){
-      var last = focusArt.getBoundingClientRect();
-      focusArt.style.transformOrigin = 'top left';
-      focusArt.style.transition = 'none';
-      focusArt.style.transform =
-        'translate(' + (first.left - last.left) + 'px,' + (first.top - last.top) + 'px)' +
-        ' scale(' + (first.width / last.width) + ')';
-      focusArt.style.opacity = '0.35';
-      requestAnimationFrame(function(){
-        focusArt.style.transition =
-          'transform 420ms var(--c-press), opacity 300ms var(--c-press)';
-        focusArt.style.transform = 'translate(0,0) scale(1)';
-        focusArt.style.opacity = '1';
-      });
-      window.setTimeout(function(){
-        focusArt.style.transition = '';
-        focusArt.style.transform = '';
-        focusArt.style.transformOrigin = '';
-        focusArt.style.opacity = '';
-      }, 460);
-    }
-
-    paintFocus(i, 1);
+    paintFocus(i);
     savedScroll = window.scrollY;
+    if (!REDUCED && window.gsap && origin && rectOnScreen(origin)){
+      var destination = focusArt.getBoundingClientRect();
+      var flight = createFocusFlight(state.series.works[i], origin, destination);
+      if (sourceCard) window.gsap.set(sourceCard, { autoAlpha:0 });
+      focusArt.classList.add('is-moving');
+      focusMotion = window.gsap.timeline({
+        defaults:{ ease:EASE.press, overwrite:'auto' },
+        onComplete:function(){
+          flight.remove();
+          if (sourceCard) window.gsap.set(sourceCard, { clearProps:'opacity,visibility' });
+          focusArt.classList.remove('is-moving');
+          focusMotion = null;
+        }
+      }).to(flight, {
+        x:0, y:0, scaleX:1, scaleY:1, padding:(destination.width * .008) + 'px', duration:.84
+      }, 0).fromTo(flight, { autoAlpha:.82 }, {
+        autoAlpha:1, duration:.62, ease:EASE.reveal
+      }, 0);
+    }
   }
 
   function closeFocus(){
-    /* 关闭：反向缩回它原来的位置（AC-36） */
-    var srcCard = $$('.plate')[state.focusIndex];
-    if (srcCard && !REDUCED){
-      var last  = srcCard.querySelector('.mat').getBoundingClientRect();
-      var first = focusArt.getBoundingClientRect();
-      focusArt.style.transformOrigin = 'top left';
-      focusArt.style.transition = 'transform 300ms var(--c-lift), opacity 220ms var(--c-lift)';
-      focusArt.style.transform =
-        'translate(' + (last.left - first.left) + 'px,' + (last.top - first.top) + 'px)' +
-        ' scale(' + (last.width / first.width) + ')';
-      focusArt.style.opacity = '0';
+    if (focusMotion) return;
+    var destination = matRect(state.focusIndex);
+    var focusRect = focusArt.getBoundingClientRect();
+    var sourceCard = $$('.plate')[state.focusIndex];
+    var work = state.series.works[state.focusIndex];
+    if (!REDUCED && window.gsap && destination && rectOnScreen(destination) && work){
+      var flight = createFocusFlight(work, focusRect, destination);
+      focusArt.classList.add('is-moving');
+      if (sourceCard) window.gsap.set(sourceCard, { autoAlpha:0 });
+      focusMotion = window.gsap.timeline({
+        defaults:{ ease:EASE.lift, overwrite:'auto' },
+        onComplete:function(){
+          flight.remove();
+          if (sourceCard) window.gsap.set(sourceCard, { clearProps:'opacity,visibility' });
+          finishCloseFocus();
+        }
+      }).to(flight, {
+        x:0, y:0, scaleX:1, scaleY:1, padding:(destination.width * .008) + 'px', autoAlpha:.28, duration:.72
+      }, 0).to(focusEl, { autoAlpha:0, duration:.48 }, .12);
+      return;
     }
-    window.setTimeout(function(){
-      state.open = false;
-      focusEl.classList.remove('open');
-      document.body.style.overflow = '';
-      focusArt.style.transition = '';
-      focusArt.style.transform = '';
-      focusArt.style.transformOrigin = '';
-      focusArt.style.opacity = '';
-      restoreScroll();                          // 关闭后滚动位置不变（AC-37）
-    }, REDUCED ? 0 : 300);
+    if (!REDUCED && window.gsap){
+      focusMotion = window.gsap.timeline({
+        defaults:{ overwrite:'auto' },
+        onComplete:function(){ focusMotion = null; finishCloseFocus(); }
+      }).to(focusArt, { scale:.96, autoAlpha:0, duration:.3, ease:EASE.lift }, 0)
+        .to(focusEl, { autoAlpha:0, duration:.3 }, 0);
+      return;
+    }
+    finishCloseFocus();
+  }
+
+  function finishCloseFocus(){
+    state.open = false;
+    focusEl.classList.remove('open');
+    document.body.style.overflow = '';
+    clearFocusMotion();
+    focusArt.style.transform = '';
+    focusArt.style.transformOrigin = '';
+    restoreScroll();
   }
 
   function step(d){
     var n = state.series.works.length;
-    if (!n) return;
-    state.focusIndex = (state.focusIndex + d + n) % n;
-    paintFocus(state.focusIndex, d);
+    if (!n || !state.open || focusMotion) return;
+
+    var oldIndex = state.focusIndex;
+    var nextIndex = (oldIndex + d + n) % n;
+    var oldWork = state.series.works[oldIndex];
+    var nextWork = state.series.works[nextIndex];
+    var focusRect = focusArt.getBoundingClientRect();
+    var oldOrigin = matRect(oldIndex);
+    var nextOrigin = matRect(nextIndex);
+    var canFly = !REDUCED && window.gsap && window.innerWidth > 760 &&
+      rectOnScreen(oldOrigin) && rectOnScreen(nextOrigin);
+
+    state.focusIndex = nextIndex;
+    var newLayer = paintFocus(nextIndex, true);
+    var oldLayers = Array.prototype.slice.call(focusArt.querySelectorAll('.layer'))
+      .filter(function(layer){ return layer !== newLayer; });
+
+    if (REDUCED || !window.gsap){
+      oldLayers.forEach(function(layer){ layer.remove(); });
+      return;
+    }
+
+    if (canFly){
+      var outgoing = createFocusFlight(oldWork, focusRect, oldOrigin);
+      var incoming = createFocusFlight(nextWork, nextOrigin, focusRect);
+      var oldCard = $$('.plate')[oldIndex];
+      var nextCard = $$('.plate')[nextIndex];
+      if (oldCard) window.gsap.set(oldCard, { autoAlpha:0 });
+      if (nextCard) window.gsap.set(nextCard, { autoAlpha:0 });
+      focusArt.classList.add('is-moving');
+      focusMotion = window.gsap.timeline({
+        defaults:{ overwrite:'auto' },
+        onComplete:function(){
+          outgoing.remove();
+          incoming.remove();
+          if (oldCard) window.gsap.set(oldCard, { clearProps:'opacity,visibility' });
+          if (nextCard) window.gsap.set(nextCard, { clearProps:'opacity,visibility' });
+          oldLayers.forEach(function(layer){ layer.remove(); });
+          focusArt.classList.remove('is-moving');
+          focusMotion = null;
+        }
+      });
+      focusMotion
+        .to(outgoing, { x:0, y:0, scaleX:1, scaleY:1, padding:(oldOrigin.width * .008) + 'px', autoAlpha:.18, duration:.72, ease:EASE.lift }, 0)
+        .to(incoming, { x:0, y:0, scaleX:1, scaleY:1, padding:(focusRect.width * .008) + 'px', autoAlpha:1, duration:.82, ease:EASE.press }, .04);
+      return;
+    }
+
+    var sign = d > 0 ? 1 : -1;
+    focusMotion = window.gsap.timeline({
+      defaults:{ overwrite:'auto' },
+      onComplete:function(){
+        oldLayers.forEach(function(layer){
+          layer.removeAttribute('style');
+          layer.remove();
+        });
+        newLayer.removeAttribute('style');
+        focusMotion = null;
+      }
+    });
+    focusMotion
+      .fromTo(oldLayers, {
+        x:0, autoAlpha:1, clipPath:'inset(0 0 0 0)'
+      }, {
+        x:-sign * 46, autoAlpha:0, clipPath:sign > 0 ? 'inset(0 100% 0 0)' : 'inset(0 0 0 100%)',
+        duration:.38, ease:EASE.lift
+      }, 0)
+      .fromTo(newLayer, {
+        x:sign * 46, autoAlpha:0, clipPath:sign > 0 ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)'
+      }, {
+        x:0, autoAlpha:1, clipPath:'inset(0 0 0 0)',
+        duration:.62, ease:EASE.press
+      }, .08);
   }
 
   /* ========================================================================
@@ -1120,47 +1357,108 @@ body{
 
   /* ========================================================================
      GSAP 揭幕：压合 720ms → 压印 120ms → 收束 360ms。
-     CDN 失败或减少动态时直接进入完整静态终态，不让网络挡住内容。
+     本地库加载失败或减少动态时直接进入完整静态终态，不让动效挡住内容。
      ====================================================================== */
-  function endUnveil(){
-    if (unveilEnded) return;
-    unveilEnded = true;
-    if (unveilTimeline) unveilTimeline.kill();
-    unveil.classList.add('done');
-    window.setTimeout(function(){ unveil.style.display = 'none'; }, 200);
+  function finishGalleryEntrance(){
+    if (galleryTimeline) galleryTimeline.kill();
+    galleryTimeline = null;
+    galleryRevealed = true;
+    if (window.gsap){
+      window.gsap.set([
+        '.wordmark', '.series li', '.exhibition-kicker', '.exhibition-title',
+        '.exhibition-note', '.plate--lead .mat', '.plate--lead .win',
+        '.plate--lead .press-mark', '.plate--right', '.plate--right-low', '.plate--closing'
+      ], { clearProps:'transform,opacity,visibility,clipPath' });
+    }
   }
   function skipUnveil(){
-    if (unveilEnded) return;
-    unveil.classList.add('skip');   // 掐掉残余动画（不播尾巴）
-    endUnveil();
+    if (galleryRevealed) return;
+    unveilEnded = true;
+    if (unveilTimeline) unveilTimeline.kill();
+    unveilTimeline = null;
+    unveil.classList.add('skip','done');
+    unveil.style.display = 'none';
+    finishGalleryEntrance();
+  }
+
+  function playGalleryEntrance(){
+    if (galleryRevealed || galleryTimeline || REDUCED || !window.gsap) return;
+    registerGsapPlugins();
+    galleryTimeline = window.gsap.timeline({
+      defaults:{ overwrite:'auto' },
+      onComplete:finishGalleryEntrance
+    });
+    galleryTimeline
+      .fromTo('.wordmark',
+        { x:-12, clipPath:'inset(0 100% 0 0)' },
+        { x:0, clipPath:'inset(0 0% 0 0)', duration:.46, ease:EASE.press }, 0
+      )
+      .fromTo('.series li',
+        { y:-18, autoAlpha:0 },
+        { y:0, autoAlpha:1, duration:.42, stagger:.075, ease:EASE.lift }, .08
+      )
+      .fromTo('.exhibition-kicker',
+        { clipPath:'inset(0 100% 0 0)' },
+        { clipPath:'inset(0 0% 0 0)', duration:.42, ease:EASE.squeegee }, .06
+      )
+      .fromTo('.exhibition-title',
+        { y:42, autoAlpha:0, clipPath:'inset(0 0 100% 0)' },
+        { y:0, autoAlpha:1, clipPath:'inset(0 0 0% 0)', duration:.82, ease:EASE.press }, .14
+      )
+      .fromTo('.exhibition-note',
+        { y:12, autoAlpha:0 },
+        { y:0, autoAlpha:1, duration:.48, ease:EASE.reveal }, .3
+      )
+      .fromTo('.plate--lead .mat',
+        { y:34, scale:.97, autoAlpha:0 },
+        { y:0, scale:1, autoAlpha:1, duration:1.02, ease:EASE.press }, .02
+      )
+      .fromTo('.plate--lead .win',
+        { clipPath:'inset(0 100% 0 0)' },
+        { clipPath:'inset(0 0% 0 0)', duration:1.12, ease:EASE.squeegee }, .12
+      )
+      .fromTo('.plate--lead .press-mark',
+        { scaleX:0, autoAlpha:.9 },
+        { scaleX:1, autoAlpha:0, duration:.28, ease:EASE.register }, .68
+      )
+      .fromTo('.plate--right, .plate--right-low, .plate--closing',
+        { x:42, y:28, autoAlpha:0 },
+        { x:0, y:0, autoAlpha:1, duration:.76, stagger:.22, ease:EASE.lift }, .5
+      );
   }
 
   function playUnveil(){
-    if (REDUCED || !window.gsap){ skipUnveil(); return; }
-    registerGsapPlugins();
-    var motion = ACTION_TOKENS.press;
-    var travel = motion.duration * .6;
-    var stamp = motion.duration * .1;
-    var settle = motion.duration * .3;
-    unveilTimeline = window.gsap.timeline({ onComplete:endUnveil });
-    unveilTimeline
-      .to('.curtain.top', { yPercent:0, duration:travel / 1000, ease:EASE.press }, 0)
-      .to('.curtain.bottom', { yPercent:0, duration:travel / 1000, ease:EASE.press }, 0)
-      .fromTo('.unveil-mark',
-        { autoAlpha:0, scaleY:.06, y:6, filter:'blur(3px)' },
-        { autoAlpha:1, scaleY:1, y:0, filter:'blur(0px)', duration:stamp / 1000, ease:EASE.press },
-        travel / 1000
-      )
-      .fromTo('.unveil-line',
-        { scaleX:0 },
-        { scaleX:1, duration:stamp / 1000, ease:EASE.press },
-        travel / 1000
-      )
-      .to({}, { duration:settle / 1000 });
+    if (REDUCED || !window.gsap){
+      unveil.style.display = 'none';
+      finishGalleryEntrance();
+      return;
+    }
+    unveil.style.display = '';
+    unveil.classList.remove('done','skip');
+    window.gsap.set(['.curtain.top','.curtain.bottom'], { yPercent:0 });
+    window.gsap.set('.unveil-mark', { autoAlpha:0, scaleY:.08, y:8, filter:'blur(4px)' });
+    window.gsap.set('.unveil-line', { scaleX:0 });
+    unveilTimeline = window.gsap.timeline({
+      defaults:{ overwrite:'auto' },
+      onComplete:function(){
+        unveil.style.display = 'none';
+        unveilTimeline = null;
+        playGalleryEntrance();
+      }
+    })
+      .to('.unveil-mark', {
+        autoAlpha:1, scaleY:1, y:0, filter:'blur(0px)',
+        duration:.52, ease:EASE.press
+      }, .18)
+      .to('.unveil-line', { scaleX:1, duration:.56, ease:EASE.press }, .18)
+      .to('.curtain.top', { yPercent:-102, duration:.86, ease:EASE.press }, .82)
+      .to('.curtain.bottom', { yPercent:102, duration:.86, ease:EASE.press }, .82)
+      .to('.unveil-mark', { autoAlpha:0, duration:.18 }, .94)
+      .to('.unveil-line', { autoAlpha:0, duration:.18 }, .94);
   }
 
-  /* 插件脚本各自异步加载；谁先到就先注册，避免单个 CDN 响应拖住整页。 */
-  var gsapPluginNames = ['Flip', 'ScrollTrigger', 'CustomEase'];
+  /* 本地核心库负责动效；插件登记钩子保留，便于后续启用扩展。 */
+  var gsapPluginNames = [];
   var registeredGsapPlugins = {};
   function registerGsapPlugins(){
     if (!window.gsap) return;
@@ -1182,30 +1480,48 @@ body{
   function waitForGsap(timeout){
     return new Promise(function(resolve){
       if (window.gsap){ resolve(true); return; }
-      var script = document.querySelector('script[src*="gsap.min.js"]');
       var settled = false;
+      var request = new XMLHttpRequest();
       function finish(ok){
         if (settled) return;
         settled = true;
+        window.removeEventListener('gsap:ready', ready);
+        window.removeEventListener('gsap:failed', failed);
+        request.onload = null;
+        request.onerror = null;
         resolve(ok && !!window.gsap);
       }
-      if (script){
-        script.addEventListener('load', function(){ finish(true); }, { once:true });
-        script.addEventListener('error', function(){ finish(false); }, { once:true });
+      function ready(){ finish(true); }
+      function failed(){ finish(false); }
+      function loadLocalGsap(){
+        if (settled || request.readyState !== 4) return;
+        if (window.gsap){ finish(true); return; }
+        if (request.status < 200 || request.status >= 300){ finish(false); return; }
+        var script = document.createElement('script');
+        script.text = request.responseText;
+        document.head.appendChild(script);
+        finish(!!window.gsap);
       }
+      window.addEventListener('gsap:ready', ready, { once:true });
+      window.addEventListener('gsap:failed', failed, { once:true });
+      request.open('GET', 'vendor/gsap.min.js', true);
+      request.onload = loadLocalGsap;
+      request.onerror = function(){ finish(false); };
+      request.send();
       window.setTimeout(function(){ finish(false); }, timeout);
     });
   }
 
   ['click','keydown','wheel','touchstart'].forEach(function(ev){
-    window.addEventListener(ev, skipUnveil, { once:false, passive:true });
+    window.addEventListener(ev, skipUnveil, { once:true, passive:true });
   });
-  waitForGsap(260).then(function(loaded){
-    if (loaded) {
-      registerGsapPlugins();
-      playUnveil();
+  waitForGsap(5000).then(function(loaded){
+    if (galleryRevealed) return;
+    if (loaded) playUnveil();
+    else {
+      unveil.style.display = 'none';
+      finishGalleryEntrance();
     }
-    else skipUnveil();
   });
 
   /* ========================================================================
