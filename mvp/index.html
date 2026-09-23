@@ -11,7 +11,7 @@
 /* ============================================================================
    Art Exhibition · MVP / S1 展示系统 v5
    ----------------------------------------------------------------------------
-   技术：纯 HTML + CSS + 原生 JS，零外部依赖、零构建（TECH_DESIGN §2）
+   技术：单文件 HTML + CSS + 原生 JS + 异步 GSAP CDN
    展示：展陈骨架（恒定）+ 环境随作品（变量）+ 语法（方言）—— DESIGN_V5 §4
 
    ★ 本步只做「恒定层 · 展陈骨架」，以及把容器从「自带材质」拉回「中性」：
@@ -116,7 +116,7 @@ body{
 }
 .unveil.done{opacity:0; pointer-events:none}
 
-/* 幕布：两道错位色块，从上下向中线合拢。画面上只能有色块 / 字标 / 细线三样（AC-02） */
+/* 幕布：GSAP 接手后从上下向中线合拢；未载入时由静态降级直接揭开展场。 */
 .unveil-press{
   position:absolute; inset:0; display:flex; flex-direction:column;
 }
@@ -133,8 +133,8 @@ body{
 /* 下幕：第二墨 30%，整块向左偏 3px —— 两道版没对准的痕（形，不是装饰） */
 .curtain.bottom i{ top:0; background:var(--ink-2); transform:translateX(-3px) }
 
-.curtain.top  { animation:shutTop var(--t-unveil) var(--c-squeegee) both }
-.curtain.bottom{ animation:shutBot var(--t-unveil) var(--c-squeegee) both }
+.curtain.top  { transform:translateY(-50%) }
+.curtain.bottom{ transform:translateY(50%) }
 
 /* 走位 720ms 走到中线；高光 120ms 压死；余下 360ms 静止（收束交给字标与展场） */
 @keyframes shutTop{
@@ -154,7 +154,8 @@ body{
 .unveil-mark{
   position:relative; z-index:2;
   text-align:center;
-  animation:markPress var(--t-unveil) linear both;
+  opacity:0;
+  transform:scaleY(.06) translateY(6px);
 }
 .unveil-mark b{
   display:block;
@@ -177,7 +178,7 @@ body{
   background:var(--wall); opacity:.55;
   transform:translate(-50%,-50%) scaleX(0);
   mix-blend-mode:difference;
-  animation:lineDraw var(--t-unveil) linear both;
+  transform:translate(-50%,-50%) scaleX(0);
 }
 @keyframes lineDraw{
   0%,59%   { transform:translate(-50%,-50%) scaleX(0) }
@@ -185,10 +186,10 @@ body{
   100%     { transform:translate(-50%,-50%) scaleX(1) }
 }
 
-/* 跳过：任意点击 / 按键 / 滚动 → 立即终态，不播残余动画（AC-04 / AC-71） */
-.unveil.skip .curtain,
-.unveil.skip .unveil-mark,
-.unveil.skip .unveil-line{ animation:none !important }
+/* 跳过和 CDN 降级：移除幕布，直接露出已经渲染好的展场。 */
+.unveil.skip .curtain{ transform:translateY(0) }
+.unveil.skip .unveil-mark{ opacity:1; transform:none }
+.unveil.skip .unveil-line{ transform:translate(-50%,-50%) scaleX(1) }
 
 /* ---------- 5 · 展场（F-04） ---------- */
 
@@ -237,16 +238,47 @@ body{
   to  { transform:scaleX(1) }
 }
 
-/* 网格：桌面采用 12 列编辑网格，让一张主作建立展墙节奏，
-   其余作品以错位支撑，不把所有卡片压成同一排（路线 1）。
-   平板与手机再收束为稳定列数，保证作品比例和阅读顺序不变。 */
+/* 序厅标题和作品墙共用同一条边界，让标题成为展览入口而非宣传横幅。 */
+.exhibition-head{
+  max-width:1480px;
+  margin:0 auto;
+  padding:112px clamp(24px,6vw,96px) 26px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(220px,340px);
+  align-items:end;
+  gap:32px;
+  border-bottom:1px solid color-mix(in srgb, var(--ink) 18%, transparent);
+}
+.exhibition-kicker{
+  margin-bottom:13px;
+  font-size:10px; font-weight:600; letter-spacing:.2em;
+  color:var(--accent);
+}
+.exhibition-title{
+  font-size:64px; line-height:.96; font-weight:600; letter-spacing:.04em;
+  color:var(--ink);
+}
+.exhibition-note{
+  max-width:290px;
+  padding-bottom:4px;
+  font-size:13px; line-height:1.65;
+  color:var(--ink-soft);
+}
+.exhibition-index{
+  display:block;
+  margin-top:11px;
+  font-size:10px; font-weight:600; letter-spacing:.18em;
+  color:var(--ink-faint);
+}
+
+/* 展墙采用 12 列编辑网格：主作先建立重量，辅助作分层回应，末作收束。 */
 .grid{
   display:grid;
   grid-template-columns:repeat(12,minmax(0,1fr));
   gap:clamp(34px,5vw,84px) clamp(18px,2.4vw,42px);
   max-width:1480px;
   margin:0 auto;
-  padding:148px clamp(24px,6vw,96px) 140px;
+  padding:30px clamp(24px,6vw,96px) 140px;
   align-items:start;
 }
 
@@ -271,8 +303,10 @@ body{
 /* 编辑型展墙：第一张作品承担入口重量，后两张形成不等高呼吸，
    最后一张回到中轴，保留系列的收束感。只对有作品的主题加这些类。 */
 .plate--lead{
-  grid-column:span 6;
+  grid-column:span 5;
 }
+.plate--right{ grid-column:7 / span 3 }
+.plate--right-low{ grid-column:10 / span 3 }
 .plate--right{
   margin-top:clamp(20px,4vw,64px);
 }
@@ -504,20 +538,30 @@ body{
 
 @media (max-width:1279px){
   .grid{ grid-template-columns:repeat(6,minmax(0,1fr)) }
+  .exhibition-head{ padding-left:6vw; padding-right:6vw }
   .plate{ grid-column:span 2 }
   .plate--lead{ grid-column:span 4 }
+  .plate--right,
+  .plate--right-low{ grid-column:span 2 }
   .plate--closing{ grid-column:3 / span 2 }
   .grid, .topbar, .focus{ padding-left:6vw; padding-right:6vw }
 }
 @media (max-width:767px){
-  .grid{ grid-template-columns:repeat(2,minmax(0,1fr)); padding-top:112px; gap:26px 16px }
+  .exhibition-head{
+    grid-template-columns:1fr;
+    gap:12px;
+    padding:132px 24px 20px;
+  }
+  .exhibition-title{ font-size:48px }
+  .exhibition-note{ max-width:30em; font-size:12px }
+  .grid{ grid-template-columns:repeat(2,minmax(0,1fr)); padding-top:24px; gap:26px 16px }
   .plate,
   .plate--lead,
   .plate--closing{ grid-column:span 1; margin-top:0 }
   .plate--lead{ grid-column:1 / -1 }
   .plate--right-low{ margin-top:20px }
   .topbar{ flex-direction:column; align-items:flex-start; gap:12px }
-  .series{ gap:12px; overflow-x:auto; width:100%; padding-bottom:2px }
+  .series{ gap:4px 14px; flex-wrap:wrap; overflow:visible; width:100%; padding-bottom:2px }
   .series button{ font-size:11px; letter-spacing:.12em; white-space:nowrap }
   .focus-stage{ flex-direction:column; gap:18px }
   .focus-art{ height:52vh }
@@ -571,6 +615,16 @@ body{
 </header>
 
 <main class="floor">
+  <section class="exhibition-head" aria-labelledby="exhibitionTitle">
+    <div>
+      <p class="exhibition-kicker" id="exhibitionKicker">SERIES 01 / 06</p>
+      <h1 class="exhibition-title" id="exhibitionTitle">ARCANA</h1>
+    </div>
+    <p class="exhibition-note">
+      An online print exhibition.
+      <span class="exhibition-index" id="exhibitionIndex">EDITION 01 · 2026</span>
+    </p>
+  </section>
   <div class="grid" id="grid"></div>
 </main>
 
@@ -594,6 +648,10 @@ body{
   </button>
 </section>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js" async></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/Flip.min.js" async data-gsap-plugin="Flip"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js" async data-gsap-plugin="ScrollTrigger"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/CustomEase.min.js" async data-gsap-plugin="CustomEase"></script>
 <script>
 (function(){
   'use strict';
@@ -639,6 +697,59 @@ body{
   var focusEl   = $('#focus');
   var focusArt  = $('#focusArt');
   var unveil    = $('#unveil');
+  var unveilTimeline = null;
+  var unveilEnded = false;
+
+  /* 自绘三次贝塞尔缓动；不用 GSAP 预设曲线，避免模板化的回弹感。 */
+  function cubicBezier(x1, y1, x2, y2){
+    function sample(a, b, t){
+      var inv = 1 - t;
+      return 3 * inv * inv * t * a + 3 * inv * t * t * b + t * t * t;
+    }
+    function slope(a, b, t){
+      var inv = 1 - t;
+      return 3 * inv * inv * a + 6 * inv * t * (b - a) + 3 * t * t * (1 - b);
+    }
+    return function(x){
+      var t = x;
+      for (var i = 0; i < 6; i++){
+        var dx = sample(x1, x2, t) - x;
+        var s = slope(x1, x2, t);
+        if (Math.abs(dx) < 0.001 || Math.abs(s) < 0.001) break;
+        t = Math.max(0, Math.min(1, t - dx / s));
+      }
+      return sample(y1, y2, t);
+    };
+  }
+  var EASE = {
+    press: cubicBezier(.2, .72, .75, 1),
+    squeegee: cubicBezier(.2, 0, .95, .98),
+    lift: cubicBezier(.4, 0, .8, 1),
+    register: cubicBezier(.32, 1.12, .66, 1),
+    reveal: cubicBezier(.25, .1, .25, 1)
+  };
+  var ACTION_TOKENS = {
+    press: {
+      duration:1200, delay:0, ease:EASE.press, interruptible:true,
+      reducedMotion:{ yPercent:0, opacity:1 }
+    },
+    squeegee: {
+      duration:600, delay:0, ease:EASE.squeegee, interruptible:true,
+      reducedMotion:{ clipPath:'inset(0 0 0 0)' }
+    },
+    lift: {
+      duration:300, delay:0, ease:EASE.lift, interruptible:true,
+      reducedMotion:{ y:0, opacity:1 }
+    },
+    register: {
+      duration:420, delay:0, ease:EASE.register, interruptible:true,
+      reducedMotion:{ x:0, y:0, scale:1 }
+    },
+    reveal: {
+      duration:420, delay:0, ease:EASE.reveal, interruptible:true,
+      reducedMotion:{ clipPath:'inset(0 0 0 0)', opacity:1 }
+    }
+  };
 
   /* 默认落在第一个【有作品】的主题上，免得一进来是一片空装裱 */
   var firstWithWorks = SERIES.filter(function(s){ return s.works.length; })[0] || SERIES[0];
@@ -650,6 +761,13 @@ body{
   /* ========================================================================
      主题导航（= 一级导航，唯一入口）
      ====================================================================== */
+  function updateExhibitionHead(series){
+    var index = SERIES.indexOf(series) + 1;
+    $('#exhibitionKicker').textContent = 'SERIES ' + pad(index).slice(-2) + ' / ' + pad(SERIES.length).slice(-2);
+    $('#exhibitionTitle').textContent = series.name;
+    $('#exhibitionIndex').textContent = 'EDITION ' + pad(index).slice(-2) + ' · 2026';
+  }
+
   function buildNav(){
     seriesNav.innerHTML = '';
     SERIES.forEach(function(s){
@@ -663,6 +781,7 @@ body{
       li.appendChild(b);
       seriesNav.appendChild(li);
     });
+    updateExhibitionHead(state.series);
   }
 
   /* 错峰数组（M3 / AC-59）：首尾疏、中段密，首尾约为中段的 2 倍 */
@@ -795,6 +914,7 @@ body{
     window.setTimeout(function(){
       state.series = next;
       state.focusIndex = 0;
+      updateExhibitionHead(next);
       document.body.dataset.theme = next.id;
       history.replaceState(null, '', '#' + next.id);
       try { localStorage.setItem('art-exhibition-theme', next.id); } catch(e){}
@@ -999,23 +1119,94 @@ body{
   }, { passive:true });
 
   /* ========================================================================
-     揭幕的收尾：1200ms 后自动进入展场；
-     期间任意点击 / 按键 / 滚动 → 立即跳终态（AC-04 / AC-71）
+     GSAP 揭幕：压合 720ms → 压印 120ms → 收束 360ms。
+     CDN 失败或减少动态时直接进入完整静态终态，不让网络挡住内容。
      ====================================================================== */
   function endUnveil(){
-    if (unveil.classList.contains('done')) return;
+    if (unveilEnded) return;
+    unveilEnded = true;
+    if (unveilTimeline) unveilTimeline.kill();
     unveil.classList.add('done');
     window.setTimeout(function(){ unveil.style.display = 'none'; }, 200);
   }
   function skipUnveil(){
+    if (unveilEnded) return;
     unveil.classList.add('skip');   // 掐掉残余动画（不播尾巴）
     endUnveil();
+  }
+
+  function playUnveil(){
+    if (REDUCED || !window.gsap){ skipUnveil(); return; }
+    registerGsapPlugins();
+    var motion = ACTION_TOKENS.press;
+    var travel = motion.duration * .6;
+    var stamp = motion.duration * .1;
+    var settle = motion.duration * .3;
+    unveilTimeline = window.gsap.timeline({ onComplete:endUnveil });
+    unveilTimeline
+      .to('.curtain.top', { yPercent:0, duration:travel / 1000, ease:EASE.press }, 0)
+      .to('.curtain.bottom', { yPercent:0, duration:travel / 1000, ease:EASE.press }, 0)
+      .fromTo('.unveil-mark',
+        { autoAlpha:0, scaleY:.06, y:6, filter:'blur(3px)' },
+        { autoAlpha:1, scaleY:1, y:0, filter:'blur(0px)', duration:stamp / 1000, ease:EASE.press },
+        travel / 1000
+      )
+      .fromTo('.unveil-line',
+        { scaleX:0 },
+        { scaleX:1, duration:stamp / 1000, ease:EASE.press },
+        travel / 1000
+      )
+      .to({}, { duration:settle / 1000 });
+  }
+
+  /* 插件脚本各自异步加载；谁先到就先注册，避免单个 CDN 响应拖住整页。 */
+  var gsapPluginNames = ['Flip', 'ScrollTrigger', 'CustomEase'];
+  var registeredGsapPlugins = {};
+  function registerGsapPlugins(){
+    if (!window.gsap) return;
+    var ready = [];
+    gsapPluginNames.forEach(function(name){
+      var plugin = window[name];
+      if (plugin && !registeredGsapPlugins[name]){
+        ready.push(plugin);
+        registeredGsapPlugins[name] = true;
+      }
+    });
+    if (ready.length) window.gsap.registerPlugin.apply(window.gsap, ready);
+  }
+  document.querySelectorAll('script[data-gsap-plugin]').forEach(function(script){
+    script.addEventListener('load', registerGsapPlugins);
+  });
+  window.addEventListener('load', registerGsapPlugins);
+
+  function waitForGsap(timeout){
+    return new Promise(function(resolve){
+      if (window.gsap){ resolve(true); return; }
+      var script = document.querySelector('script[src*="gsap.min.js"]');
+      var settled = false;
+      function finish(ok){
+        if (settled) return;
+        settled = true;
+        resolve(ok && !!window.gsap);
+      }
+      if (script){
+        script.addEventListener('load', function(){ finish(true); }, { once:true });
+        script.addEventListener('error', function(){ finish(false); }, { once:true });
+      }
+      window.setTimeout(function(){ finish(false); }, timeout);
+    });
   }
 
   ['click','keydown','wheel','touchstart'].forEach(function(ev){
     window.addEventListener(ev, skipUnveil, { once:false, passive:true });
   });
-  window.setTimeout(endUnveil, REDUCED ? 240 : 1200);
+  waitForGsap(260).then(function(loaded){
+    if (loaded) {
+      registerGsapPlugins();
+      playUnveil();
+    }
+    else skipUnveil();
+  });
 
   /* ========================================================================
      初始化：锚点 / 记忆主题优先（AC-12 / AC-13）
