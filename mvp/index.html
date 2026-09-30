@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ART EXHIBITION</title>
 <meta name="description" content="Art Exhibition">
-<!-- 页签图标：内联 SVG，零外部请求 -->
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%23E7E1D6'/%3E%3Crect x='4.5' y='2.5' width='7' height='11' fill='none' stroke='%23232019' stroke-width='1'/%3E%3C/svg%3E">
 <style>
 /* ============================================================================
    Art Exhibition · MVP / S1 展示系统 v5
@@ -167,6 +165,25 @@ body{
 .wall-tech .network path,.wall-tech .network line{fill:none;stroke:rgba(35,40,39,.28);stroke-width:.7;vector-effect:non-scaling-stroke}
 .wall-tech .network .accent{stroke:rgba(234,237,229,.55);stroke-dasharray:2 5;animation:signalFlow 24s linear infinite}
 .wall-tech .network circle{fill:#D0D2CA;stroke:rgba(35,40,39,.56);stroke-width:1;vector-effect:non-scaling-stroke}
+.wall-tech .network .node-pulse{fill:#D0D2CA;stroke:#1C55D9;stroke-width:1.4;}
+.wall-tech .network .node-pulse:nth-of-type(2n){stroke:#C72E49}
+.wall-tech .network{display:none}
+.raster-stage{position:absolute;inset:0;overflow:hidden;isolation:isolate;}
+.raster-stage::before{content:"";position:absolute;inset:0;z-index:2;pointer-events:none;background:linear-gradient(116deg,transparent 0 31%,rgba(20,86,218,.28) 31.2% 35%,transparent 35.4% 58%,rgba(220,25,92,.2) 58.3% 62%,transparent 62.4%),linear-gradient(180deg,rgba(10,18,28,.26),transparent 28%,rgba(244,245,238,.05) 72%,rgba(9,14,24,.2));mix-blend-mode:color-burn;}
+.raster-stage::after{content:"";position:absolute;inset:0;z-index:6;pointer-events:none;background:linear-gradient(90deg,rgba(19,73,180,.13),transparent 18% 77%,rgba(214,26,81,.1));mix-blend-mode:screen;}
+.raster-stage img{position:absolute;display:block;pointer-events:none;user-select:none;max-width:none;}
+.raster-dome{right:-5%;top:21%;width:54%;opacity:.12;mix-blend-mode:screen;filter:grayscale(1) contrast(1.22);transform:rotate(2deg);}
+.raster-orbit{left:18%;top:8%;width:68%;opacity:.12;mix-blend-mode:multiply;filter:grayscale(1) contrast(1.24);transform:rotate(-2deg);}
+.raster-figure{right:16%;top:26%;width:29%;opacity:.1;mix-blend-mode:multiply;filter:grayscale(1) contrast(1.48);transform:rotate(1deg);}
+.raster-doves{left:-2%;top:5%;width:74%;opacity:.62;mix-blend-mode:screen;filter:grayscale(1) contrast(1.5);animation:doveSheetDrift 26s cubic-bezier(.37,0,.63,1) infinite alternate;}
+.ambient-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:4;pointer-events:none;}
+.raster-scan{position:absolute;inset:-8%;z-index:5;pointer-events:none;opacity:.1;background:repeating-linear-gradient(0deg,transparent 0 7px,rgba(26,44,62,.17) 8px,transparent 9px 15px);mix-blend-mode:multiply;animation:scanBreath 12s cubic-bezier(.37,0,.63,1) infinite alternate;}
+@keyframes doveSheetDrift{to{transform:translate3d(2.2vw,1.4vh,0) scale(1.02)}}
+@keyframes scanBreath{to{opacity:.27;transform:translateY(1.5%)}}
+.glitch-burst{animation:glitchBurst 180ms steps(2,end) both;}
+@keyframes glitchBurst{0%,100%{filter:none;opacity:1}25%{filter:drop-shadow(5px 0 rgba(199,46,73,.7)) drop-shadow(-5px 0 rgba(28,85,217,.7));opacity:.82}55%{transform:translateX(-3px);opacity:.58}75%{transform:translateX(3px);opacity:.9}}
+@keyframes doveFlight{0%{transform:translate3d(0,0,0) rotate(2deg);opacity:0}8%{opacity:.8}42%{transform:translate3d(43vw,-5vh,0) rotate(-4deg);opacity:.72}76%{transform:translate3d(88vw,8vh,0) rotate(4deg);opacity:.55}100%{transform:translate3d(118vw,0,0) rotate(-2deg);opacity:0}}
+.theology-dove.is-flying{animation:doveFlight 9s cubic-bezier(.2,.62,.38,1) both;}
 .wall-tech .scan-x{
   left:-10vw; right:-10vw; top:18%; height:1px;
   background:linear-gradient(90deg, transparent, rgba(255,255,255,.7) 18%, rgba(30,34,33,.18) 58%, transparent);
@@ -339,7 +356,7 @@ body{
   min-height:100svh;
   display:grid;
   grid-template-rows:auto;
-  grid-template-columns:minmax(250px,.62fr) minmax(0,1.38fr);
+  grid-template-columns:minmax(260px,1fr) minmax(250px,.34fr);
   align-items:stretch;
   max-width:1720px;
   margin:0 auto;
@@ -408,11 +425,11 @@ body{
   min-width:0;
   height:auto;
   display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-columns:minmax(0,1fr);
   grid-auto-rows:auto;
-  gap:34px clamp(18px,2.4vw,36px);
+  gap:22px;
   align-content:start;
-  padding:96px clamp(24px,4vw,64px) 88px clamp(22px,3vw,46px);
+  padding:96px clamp(22px,2.6vw,42px) 72px clamp(18px,2.2vw,36px);
   align-items:start;
 }
 
@@ -425,7 +442,8 @@ body{
   position:relative;
   display:flex; flex-direction:column;
   grid-column:auto;
-  width:100%; aspect-ratio:2/3;               /* 外框比例，不裁切不变形 */
+  width:min(100%,220px); aspect-ratio:2/3;               /* 外框比例，不裁切不变形 */
+  justify-self:end;
   border:0; padding:0; background:none; cursor:pointer;
   text-align:center; font:inherit; color:inherit;
   /* 入场：默认在纸下压着，进视口后揭起 */
@@ -439,7 +457,7 @@ body{
   grid-column:auto;
   grid-row:auto;
   align-self:initial;
-  width:100%;
+  width:min(100%,250px);
   height:auto;
   aspect-ratio:2/3;
 }
@@ -457,11 +475,11 @@ body{
   position:relative;
   flex:1; min-height:0;                        /* 弹性占满除铭牌外的全部高度 */
   padding:var(--mat-pad);                      /* 卡纸：四周等宽 */
-  background:var(--mat);
+  background:color-mix(in srgb, var(--mat) 72%, transparent);
   display:flex; align-items:center; justify-content:center;
   overflow:hidden;
   /* 装裱窗的内影：不是投影，是「作品被嵌进去」的一道痕 */
-  box-shadow:inset 0 0 0 .5px rgba(35,32,25,.10);
+  box-shadow:inset 0 0 0 .5px rgba(240,238,230,.28), 0 12px 28px -22px rgba(10,18,25,.72);
   transition:background-color 480ms var(--c-press), box-shadow 200ms var(--c-press);
 }
 
@@ -558,8 +576,9 @@ body{
   background:color-mix(in srgb, var(--wall) 74%, transparent);
   backdrop-filter:blur(4px) saturate(.92);
 }
-.focus.open{ display:flex; animation:focusIn 220ms var(--c-press) both }
-@keyframes focusIn{ from{ opacity:0 } to{ opacity:1 } }
+/* 开合交给 GSAP 时间轴统一接管。这里只负责 display ——
+   CSS 动画的优先级高于内联样式，留着它就会和 GSAP 的 opacity 打架。 */
+.focus.open{ display:flex }
 
 .focus-stage{
   display:flex; align-items:center; gap:clamp(24px,4vw,64px);
@@ -591,14 +610,21 @@ body{
 }
 
 /* 作品临时影像：切换时在展墙卡位与焦点画框之间进行真实空间补间。 */
+/* 飞行层只带图片本身，不带画框。
+   起点是展墙上那张图，终点是「图片在槽位里按原比例居中」后的矩形 ——
+   两端同为图片自身的比例，飞行才是纯等比缩放，中途不会被压扁。
+   画框由 .focus-stage / .focus-art 在第三拍单独装上。 */
 .focus-flight{
   position:fixed;left:0;top:0;z-index:70;
   display:flex;align-items:center;justify-content:center;
   padding:0;overflow:hidden;background:transparent;
   pointer-events:none;will-change:transform,width,height,opacity;
 }
-.focus-flight img{display:block;width:100%;height:100%;object-fit:contain;transform:scale(1.08);box-shadow:0 14px 28px -22px rgba(35,32,25,.7)}
-.focus-art.is-moving .layer{visibility:hidden}
+.focus-flight img{display:block;width:100%;height:100%;object-fit:contain;transform:none;box-shadow:none}
+.focus-art.is-moving .layer,
+.focus-art.is-moving .layer img{visibility:hidden !important}
+.focus-art.is-moving,
+.focus-art.is-moving .layer{display:none !important}
 
 .focus-info{ display:flex; flex-direction:column; gap:10px; min-width:220px; max-width:320px }
 .focus-name{
@@ -631,6 +657,8 @@ body{
 .nav-btn.prev{ left:clamp(12px,3vw,48px) }
 .nav-btn.next{ right:clamp(12px,3vw,48px) }
 .nav-btn svg{ width:16px; height:16px }
+.nav-btn.prev::before{content:"<";font-size:22px;line-height:1}
+.nav-btn.next::before{content:">";font-size:22px;line-height:1}
 
 .close-btn{
   position:fixed; top:22px; right:clamp(24px,6vw,96px); z-index:46;
@@ -665,8 +693,8 @@ body{
 /* ---------- 9 · 响应式（AC-27） ---------- */
 
 @media (max-width:1279px){
-  .floor{ grid-template-columns:minmax(230px,.62fr) minmax(0,1.38fr) }
-  .grid{ grid-template-columns:repeat(2,minmax(0,1fr)); padding-left:20px; padding-right:22px; gap:28px 20px }
+  .floor{ grid-template-columns:minmax(230px,1fr) minmax(230px,.38fr) }
+  .grid{ grid-template-columns:minmax(0,1fr); padding-left:20px; padding-right:22px; gap:22px }
   .topbar{ padding-left:32px; padding-right:32px }
 }
 @media (max-width:767px){
@@ -680,6 +708,14 @@ body{
   .wall-tech .signal-b{top:26%;right:5%;font-size:7px}
   .wall-tech .signal-c{bottom:5%;left:5%;font-size:7px}
   .wall-tech .network{top:20%;height:56%}
+  .theology-cross{left:24%;top:16%;transform:rotate(-7deg) scale(.78)}
+  .theology-statue{left:14%;bottom:5%;transform:scale(.72);transform-origin:bottom left}
+  .theology-path{left:3%;top:29%;width:86%;height:28%}
+  .theology-dove{top:25%;transform:scale(.72)}
+  .raster-dome{width:102%;right:-38%;top:30%;opacity:.16}
+  .raster-orbit{width:155%;left:-27%;top:18%;opacity:.1}
+  .raster-figure{width:64%;right:-4%;top:36%;opacity:.1}
+  .raster-doves{width:175%;left:-28%;top:9%;opacity:.35}
   .exhibition-head{
     --ink:#F0EEE6;
     --ink-soft:rgba(240,238,230,.72);
@@ -700,7 +736,7 @@ body{
   .exhibition-note{ max-width:30em; margin-top:17px; padding-top:12px; font-size:12px }
   .exhibition-index{ margin-top:9px }
   .grid{ grid-column:auto; grid-row:auto; height:auto; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:auto; padding:24px 22px 72px; gap:24px 14px }
-  .plate,.plate--lead,.plate--right,.plate--right-low,.plate--closing{grid-column:auto;grid-row:auto;width:100%;height:auto;aspect-ratio:2/3;margin:0}
+  .plate,.plate--lead,.plate--right,.plate--right-low,.plate--closing{grid-column:auto;grid-row:auto;width:100%;max-width:220px;height:auto;aspect-ratio:2/3;margin:0;justify-self:end}
   .topbar{ flex-direction:column; align-items:flex-start; gap:12px }
   .series{ gap:4px 14px; flex-wrap:wrap; overflow:visible; width:100%; padding-bottom:2px }
   .series button{ font-size:11px; letter-spacing:.12em; white-space:nowrap }
@@ -720,7 +756,10 @@ body{
    一屏的 60%（走位）与 30%（收束）归零，只留下那 10%。 */
 @media (prefers-reduced-motion: reduce){
   html{scroll-behavior:auto}
-  .wall,.wall::before,.wall-tech i,.wall-tech .network .accent{animation:none !important}
+  .wall,.wall::before,.wall-tech i,.wall-tech .network .accent,.raster-doves,.raster-scan{animation:none !important}
+  .ambient-canvas{display:none}
+  .theology-dove{animation:none !important;opacity:.5;left:48%;}
+  .glitch-burst{animation:none !important;filter:none !important;transform:none !important;}
   .curtain.top,
   .curtain.bottom{ animation:none; transform:translateY(0) }
   .unveil-mark{ animation:none; opacity:1 }
@@ -734,9 +773,742 @@ body{
   .focus-flight{ display:none }
   .plate .mat{ transition-duration:0ms }
 }
+
+/* ---------- 11 · 参考图展陈皮肤：纸面、几何色块与中央装裱 ---------- */
+.video-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  opacity:.56;
+  filter:saturate(.82) contrast(1.02) brightness(1.08);
+  pointer-events:none;
+}
+.wall{
+  z-index:1;
+  background:
+    linear-gradient(120deg,rgba(248,249,247,.86),rgba(237,241,240,.68) 46%,rgba(28,39,47,.54)),
+    repeating-linear-gradient(0deg,rgba(35,42,43,.045) 0 1px,transparent 1px 5px);
+  mix-blend-mode:normal;
+}
+.wall::before{opacity:.45}
+.wall-tech{z-index:2;opacity:.62}
+.floor{z-index:4;display:block;max-width:1500px;padding:104px clamp(24px,5vw,78px) 90px}
+.topbar{z-index:20;padding:22px clamp(24px,5vw,78px);background:rgba(238,241,239,.22)}
+.topbar.stuck{background:rgba(32,42,47,.78);color:#f3f1ea}
+.wordmark{color:#1e292d;text-shadow:0 1px rgba(255,255,255,.45)}
+.topbar.stuck .wordmark,.topbar.stuck .series button{color:#f3f1ea}
+.series{gap:clamp(10px,1.7vw,24px)}
+.series button{color:rgba(30,41,45,.68)}
+.floor .exhibition-head{
+  min-height:0;
+  padding:26px 0 38px;
+  display:flex;
+  flex-direction:row;
+  align-items:flex-end;
+  justify-content:space-between;
+  border-right:0;
+  border-bottom:1px solid rgba(30,41,45,.22);
+}
+.exhibition-head::before{top:0;left:0;width:62px;height:4px;background:#c92f54}
+.exhibition-head::after{left:auto;right:0;bottom:18px;color:rgba(30,41,45,.48)}
+.exhibition-kicker{margin-bottom:12px;color:#174fd2}
+.exhibition-title{font-size:clamp(42px,7vw,92px);letter-spacing:.02em;color:#17252b;text-shadow:3px 0 rgba(24,83,213,.18),-3px 0 rgba(201,47,84,.13)}
+.exhibition-note{max-width:310px;margin:0;padding:0 0 4px;border-top:0;font-size:14px;line-height:1.65;color:rgba(23,37,43,.72)}
+.exhibition-index{margin-top:10px;color:#174fd2}
+.grid{
+  height:auto;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:clamp(18px,2vw,32px);
+  padding:48px 0 40px;
+  align-items:start;
+}
+.plate,.plate--lead,.plate--right,.plate--right-low,.plate--closing{width:100%;max-width:none;aspect-ratio:2/3;opacity:1;transform:none}
+.plate.in{opacity:1;transform:none}
+.mat{
+  flex:1;
+  padding:clamp(9px,1vw,15px);
+  background:#e7e8e3;
+  border:1px solid rgba(28,37,42,.3);
+  box-shadow:10px 10px 0 rgba(23,81,207,.17),-8px 7px 0 rgba(201,47,84,.15),0 18px 32px -24px rgba(17,27,31,.62);
+}
+.mat::before,.mat::after{content:"";position:absolute;z-index:0;pointer-events:none}
+.mat::before{left:-8%;top:18%;width:42%;height:30%;background:rgba(24,83,213,.36);transform:rotate(-8deg)}
+.mat::after{right:-12%;bottom:8%;width:52%;height:28%;background:rgba(201,47,84,.3);transform:rotate(7deg)}
+.win{z-index:1;border:1px solid rgba(29,36,39,.42);box-shadow:inset 0 0 0 5px rgba(241,239,230,.56),0 8px 16px -14px rgba(13,21,26,.75)}
+.win > img{transform:scale(1.02);box-shadow:0 5px 14px -12px rgba(13,21,26,.8)}
+.meta{padding:14px 4% 2px;gap:5px}
+.meta-name{font-size:12px;letter-spacing:.11em;color:#17262d}
+.meta-series{font-size:9px;letter-spacing:.18em;color:rgba(23,38,45,.64)}
+.meta-no{font-size:9px;color:#174fd2}
+.focus{z-index:50;background:rgba(17,27,32,.78);backdrop-filter:blur(8px) saturate(.9)}
+.focus-stage{max-width:1160px;gap:clamp(28px,5vw,82px)}
+.focus-art{height:min(74vh,780px);background:#e8e8e2;padding:14px;border:1px solid rgba(247,244,234,.75);box-shadow:12px 12px 0 rgba(23,81,207,.3),-10px 8px 0 rgba(201,47,84,.23),0 30px 60px -34px rgba(0,0,0,.75)}
+.focus-art::before,.focus-art::after{content:"";position:absolute;z-index:0;pointer-events:none}
+.focus-art::before{left:-22%;top:28%;width:56%;height:24%;background:rgba(23,81,207,.3);transform:rotate(-12deg)}
+.focus-art::after{right:-24%;bottom:14%;width:62%;height:22%;background:rgba(201,47,84,.28);transform:rotate(10deg)}
+.focus-art .layer{z-index:1;padding:14px}
+.focus-art .layer img{transform:scale(1.02);box-shadow:0 12px 24px -20px rgba(0,0,0,.76)}
+.focus-info{position:relative;z-index:2;min-width:260px;max-width:360px;padding:26px 24px;border-left:3px solid #c92f54;background:rgba(20,31,36,.67);box-shadow:8px 8px 0 rgba(23,81,207,.24)}
+.focus-name{font-size:clamp(24px,3.8vw,42px);color:#f2f0e8;letter-spacing:.04em}
+.focus-series{color:#8db1ff;letter-spacing:.16em}
+.focus-count{color:rgba(242,240,232,.62)}
+.focus-description{margin-top:14px;font-size:14px;line-height:1.9;color:rgba(247,245,236,.92)}
+.focus-hint{margin-top:22px;color:rgba(247,245,236,.58);font-size:10px;line-height:1.7}
+.close-btn{color:rgba(247,245,236,.76)}
+.close-btn:hover{color:#fff}
+.nav-btn{color:rgba(247,245,236,.68)}
+.nav-btn:hover{color:#fff;background:rgba(255,255,255,.1)}
+@media (max-width:900px){
+  .floor{padding-top:118px}
+  .floor .exhibition-head{display:block;padding-bottom:30px}
+  .exhibition-note{margin-top:20px;max-width:28em}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 16px;padding-top:30px}
+}
+@media (max-width:560px){
+  .topbar{background:rgba(238,241,239,.76)}
+  .floor{padding-left:18px;padding-right:18px}
+  .grid{grid-template-columns:1fr;gap:30px}
+  .plate{max-width:300px;justify-self:center}
+  .focus{padding:78px 18px 30px;overflow:auto}
+  .focus-stage{flex-direction:column;gap:18px}
+  .focus-art{height:58vh}
+  .focus-info{width:min(100%,360px);min-width:0;max-width:none;padding:20px}
+}
+
+/* ---------- 12 · 参考图原样模板：视频唯一背景 + 中央替换画心 ---------- */
+body{
+  background:#10171b;
+}
+.video-backdrop{
+  z-index:0;
+  opacity:1;
+  filter:none;
+  background:#10171b;
+}
+.wall,
+.wall-tech{
+  display:none !important;
+}
+.topbar{
+  background:rgba(13,20,24,.52);
+  backdrop-filter:blur(4px);
+}
+.wordmark,.series button{color:rgba(247,244,235,.9)}
+.series button:hover,.series button[aria-selected="true"]{color:#fff}
+.floor{
+  z-index:4;
+  max-width:1540px;
+  padding-top:112px;
+}
+.floor .exhibition-head{
+  color:#f5f2e9;
+  border-bottom-color:rgba(245,242,233,.3);
+}
+.exhibition-title{color:#f5f2e9;text-shadow:3px 0 rgba(24,83,213,.58),-3px 0 rgba(201,47,84,.5)}
+.exhibition-note{color:rgba(245,242,233,.8)}
+.exhibition-head::after{color:rgba(245,242,233,.7)}
+.grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:clamp(28px,4vw,64px);
+  padding-top:42px;
+}
+.plate,.plate--lead,.plate--right,.plate--right-low,.plate--closing{
+  width:100%;
+  max-width:none;
+  height:auto;
+  aspect-ratio:auto;
+  opacity:1;
+  transform:none;
+}
+.mat{
+  position:relative;
+  flex:none;
+  width:100%;
+  aspect-ratio:2048 / 1152;
+  padding:0;
+  overflow:hidden;
+  border:0;
+  background-color:#e8e9e5;
+  background-image:url("assets/reference-display.png");
+  background-size:cover;
+  background-position:center;
+  box-shadow:0 24px 50px -30px rgba(0,0,0,.9);
+}
+.mat::before,.mat::after{display:none}
+.win{
+  position:absolute;
+  z-index:2;
+  left:37.25%;
+  top:15.55%;
+  width:25.5%;
+  height:67.25%;
+  max-width:none;
+  max-height:none;
+  min-width:0;
+  min-height:0;
+  aspect-ratio:auto;
+  display:block;
+  border:1px solid rgba(224,214,183,.7);
+  background:#0b1c28;
+  box-shadow:0 0 0 2px rgba(14,27,35,.45),0 8px 20px -15px rgba(0,0,0,.85);
+}
+.win > img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  transform:none;
+  background:#0b1c28;
+  box-shadow:none;
+}
+.meta{
+  padding:13px 4% 0;
+}
+.meta-name{color:#f5f2e9;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+.meta-series{color:rgba(245,242,233,.72)}
+.meta-no{color:#8fb0ff}
+.focus{
+  background:rgba(8,13,16,.84);
+}
+.focus-stage{
+  max-width:1360px;
+  gap:clamp(28px,5vw,76px);
+}
+/* 注：衬托背景不在这一层。第 14 节里它挂在 .focus-stage 上（参考图模板整幅），
+   画心槽 .focus-art 只负责作品本身 —— 两者分开，才能先送作品、后上装裱。 */
+.focus-art{
+  width:min(68vw,920px);
+  height:auto;
+  aspect-ratio:2048 / 1152;
+  flex:none;
+  padding:0;
+  overflow:hidden;
+  border:0;
+  background:none;
+}
+.focus-art::before,.focus-art::after{display:none}
+.focus-art .layer{
+  inset:auto;
+  left:37.25%;
+  top:15.55%;
+  width:25.5%;
+  height:67.25%;
+  padding:0;
+  display:block;
+  border:1px solid rgba(224,214,183,.7);
+  background:#0b1c28;
+  box-shadow:0 0 0 2px rgba(14,27,35,.45),0 8px 20px -15px rgba(0,0,0,.85);
+}
+.focus-art .layer img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  transform:none;
+  box-shadow:none;
+}
+.focus-info{
+  background:rgba(12,21,26,.83);
+  border-left-color:#c92f54;
+}
+@media (max-width:900px){
+  .grid{grid-template-columns:1fr}
+  .plate{width:100%;max-width:760px;justify-self:center}
+  .focus-art{width:min(92vw,760px)}
+}
+@media (max-width:560px){
+  .floor{padding-top:126px}
+  .grid{gap:30px;padding-top:28px}
+  .focus-art{width:94vw}
+}
+
+/* ---------- 13 · 静态浏览模式：右侧单列 + 点击后静态模板 ---------- */
+html,body{scroll-behavior:auto}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  display:none;
+}
+.video-backdrop{z-index:0}
+.topbar{z-index:20}
+.unveil{display:none !important}
+.floor{
+  position:relative;
+  z-index:4;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(360px,520px);
+  column-gap:clamp(34px,7vw,120px);
+  align-items:start;
+  max-width:1540px;
+  min-height:100svh;
+  padding:124px clamp(24px,5vw,80px) 90px;
+}
+.floor .exhibition-head{
+  grid-column:1;
+  grid-row:1;
+  align-self:start;
+  position:sticky;
+  top:124px;
+  display:block;
+  padding:36px 0 56px;
+  border-bottom:0;
+}
+.floor .exhibition-head::before{top:0}
+.floor .exhibition-head::after{left:0;right:auto;bottom:24px}
+.grid{
+  grid-column:2;
+  grid-row:1;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  gap:42px;
+  width:100%;
+  padding:0;
+}
+.plate,.plate.in,.plate.stagger,.plate.leaving{
+  width:100%;
+  max-width:none;
+  opacity:1 !important;
+  transform:none !important;
+  animation:none !important;
+  transition:none !important;
+}
+.plate:hover .mat,.plate:focus-visible .mat{box-shadow:0 24px 50px -30px rgba(0,0,0,.9)}
+.plate:focus-visible{outline:2px solid #f4e8c7;outline-offset:5px}
+.meta{padding:12px 0 0;text-align:left;align-items:flex-start}
+.meta-name{font-size:13px}
+.meta-series,.meta-no{font-size:10px}
+.focus{animation:none !important;transition:none !important}
+.focus.open{animation:none !important}
+.focus-art,.focus-art .layer,.focus-art .layer img{transition:none !important;animation:none !important}
+/* 飞行层重新启用：Day 10 的「作品飞到中间」就靠它。
+   此前它被 display:none 关掉，聚焦只剩一层遮罩淡入 —— 那正是观感生硬的根因之一。 */
+.focus.motion{transition:none !important}
+.focus.motion .focus-stage{transition:none !important}
+.focus-info{animation:none !important}
+@media (max-width:900px){
+  .floor{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) minmax(250px,42%);
+    column-gap:24px;
+    padding-left:22px;
+    padding-right:22px;
+  }
+  .grid{gap:30px}
+  .floor .exhibition-head{top:112px;padding-top:24px}
+  .focus{align-items:flex-start;justify-content:center;padding:76px 18px 28px;overflow:auto}
+  .focus-stage{flex-direction:column;align-items:center;justify-content:flex-start;gap:18px}
+  .focus-art{width:min(92vw,760px)}
+  .focus-info{width:min(92vw,520px);min-width:0;max-width:none}
+}
+@media (max-width:640px){
+  .floor{display:block;min-height:0;padding-top:122px}
+  .floor .exhibition-head{position:relative;top:auto;padding:22px 0 30px}
+  .grid{display:flex;gap:30px;padding-top:24px}
+  .meta{text-align:center;align-items:center}
+}
+
+/* ---------- 14 · 主界面原图浏览 / 点击后全屏模板 ---------- */
+.plate{
+  aspect-ratio:auto;
+  background:none;
+  box-shadow:none;
+}
+.mat{
+  position:relative;
+  width:100%;
+  height:auto;
+  aspect-ratio:auto;
+  flex:none;
+  display:block;
+  padding:0;
+  overflow:visible;
+  border:0;
+  background:none;
+  box-shadow:none;
+}
+.mat::before,.mat::after{display:none !important}
+.win{
+  position:relative;
+  inset:auto;
+  width:100%;
+  height:auto;
+  max-width:100%;
+  max-height:none;
+  display:block;
+  aspect-ratio:auto;
+  overflow:visible;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+}
+.win > img{
+  display:block;
+  width:100%;
+  height:auto;
+  max-height:72vh;
+  object-fit:contain;
+  transform:none;
+  background:transparent;
+  box-shadow:none;
+}
+.meta{padding:10px 0 0}
+.meta-name{color:#f4f1e8}
+.meta-series{color:rgba(244,241,232,.7)}
+.meta-no{color:#86aaff}
+.focus{
+  display:flex !important;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  overflow:auto;
+  background:#10171b;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transition:opacity 240ms cubic-bezier(.2,.72,.75,1),visibility 240ms linear;
+  backdrop-filter:none;
+}
+.focus.open{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  animation:none;
+}
+.focus-stage{
+  position:relative;
+  display:block;
+  flex:none;
+  width:min(100vw,177.7778vh);
+  max-width:none;
+  height:auto;
+  max-height:100vh;
+  aspect-ratio:16 / 9;
+  overflow:visible;
+  background-image:url("assets/reference-display.png");
+  background-size:100% 100%;
+  background-position:center;
+  background-repeat:no-repeat;
+  transform:scale(.985);
+  transition:transform 260ms cubic-bezier(.2,.72,.75,1);
+}
+.focus.open .focus-stage{transform:scale(1)}
+.focus-art{
+  position:absolute;
+  left:37.25%;
+  top:15.55%;
+  width:25.5%;
+  height:67.25%;
+  aspect-ratio:auto;
+  padding:0;
+  overflow:hidden;
+  border:1px solid rgba(224,214,183,.7);
+  background:#0b1c28;
+  box-shadow:0 0 0 2px rgba(14,27,35,.46),0 8px 20px -15px rgba(0,0,0,.8);
+}
+.focus-art::before,.focus-art::after{display:none}
+.focus-art .layer{
+  inset:0;
+  width:100%;
+  height:100%;
+  padding:0;
+  display:block;
+  border:0;
+  background:#0b1c28;
+  box-shadow:none;
+}
+.focus-art .layer img{
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  transform:none;
+  background:#0b1c28;
+  box-shadow:none;
+}
+.focus-info{
+  position:absolute;
+  z-index:3;
+  left:37.25%;
+  top:84.5%;
+  display:flex;
+  width:31%;
+  min-width:0;
+  max-width:390px;
+  gap:8px;
+  padding:0;
+  border:0;
+  background:none;
+  box-shadow:none;
+  text-align:left;
+  align-items:flex-start;
+  transform:translateX(0);
+  text-shadow:0 1px 3px rgba(248,247,241,.68);
+}
+.focus-name{
+  font-size:clamp(20px,2.4vw,34px);
+  line-height:1.08;
+  color:#17262d;
+  text-shadow:inherit;
+}
+.focus-series{font-size:12px;color:#174fd2;text-shadow:inherit}
+.focus-count{margin-top:1px;font-size:11px;color:#174fd2;text-shadow:inherit}
+.focus-description{
+  margin-top:5px;
+  max-width:36em;
+  font-size:clamp(12px,1.05vw,15px);
+  line-height:1.75;
+  color:#17262d;
+  text-shadow:inherit;
+}
+.focus-hint{
+  margin-top:7px;
+  color:rgba(23,38,45,.68);
+  text-shadow:inherit;
+}
+.close-btn{top:24px;right:28px;z-index:6;color:#17262d;text-shadow:0 1px 3px rgba(255,255,255,.68)}
+.nav-btn{z-index:6;color:#17262d;text-shadow:0 1px 3px rgba(255,255,255,.68)}
+@media (max-width:720px){
+  .floor{grid-template-columns:minmax(0,1fr) minmax(220px,42%);column-gap:18px;padding-left:18px;padding-right:18px}
+  .floor .exhibition-head{grid-column:1;grid-row:1}
+  .grid{grid-column:2;grid-row:1}
+  .focus{align-items:flex-start;justify-content:center}
+  .focus-stage{width:100vw;height:620px;min-height:620px;max-height:none;aspect-ratio:auto;background-size:auto 620px;background-color:#10171b;transform:none}
+  .focus.open .focus-stage{transform:none}
+  .focus-art{left:calc(50% - 108px);top:58px;width:216px;height:300px;transform:none}
+  .focus-info{left:7%;top:385px;bottom:auto;width:86%;max-width:none}
+  .focus-name{font-size:24px}
+}
+@media (max-width:560px){
+  .floor{display:block;padding-top:122px}
+  .floor .exhibition-head{position:relative;top:auto;padding:22px 0 30px}
+  .grid{display:flex;gap:28px;padding-top:18px}
+  .plate{width:100%;max-width:420px;align-self:center}
+  .win > img{max-height:none}
+  .focus-stage{background-position:center;background-size:auto 620px}
+  .focus-art{left:calc(50% - 96px);top:54px;width:192px;height:268px}
+  .focus-info{top:345px;bottom:auto;width:82%}
+  .focus-description{font-size:13px}
+  .close-btn{top:14px;right:16px}
+}
+
+/* ---------- 15 · 最终文字排版：左侧题签 + 右侧作品介绍 ---------- */
+.focus-info{
+  left:0;
+  top:0;
+  width:100%;
+  max-width:none;
+  height:100%;
+  display:block;
+  padding:0;
+  text-align:left;
+  transform:none;
+  text-shadow:0 1px 3px rgba(248,247,241,.68);
+}
+.focus-name,
+.focus-series,
+.focus-count,
+.focus-description,
+.focus-hint{
+  position:absolute;
+  margin:0;
+}
+.focus-name{
+  left:7.5%;
+  bottom:17.5%;
+  max-width:29%;
+  font-size:clamp(22px,2.6vw,38px);
+  line-height:1;
+  letter-spacing:.05em;
+  color:#17262d;
+}
+.focus-series{
+  left:7.7%;
+  bottom:13.5%;
+  font-size:clamp(11px,1vw,15px);
+  letter-spacing:.2em;
+  color:#174fd2;
+}
+.focus-count{
+  left:7.7%;
+  bottom:10.3%;
+  font-size:clamp(10px,.9vw,13px);
+  letter-spacing:.16em;
+  color:#174fd2;
+}
+.focus-description{
+  right:7.5%;
+  bottom:10.5%;
+  width:27%;
+  max-width:360px;
+  font-size:clamp(12px,1.05vw,16px);
+  line-height:1.85;
+  letter-spacing:.03em;
+  color:#17262d;
+}
+.focus-hint{
+  right:7.7%;
+  bottom:5.2%;
+  font-size:clamp(9px,.72vw,11px);
+  letter-spacing:.12em;
+  color:rgba(23,38,45,.68);
+}
+@media (max-width:720px){
+  .focus-info{height:620px}
+  .focus-name{left:7%;top:385px;bottom:auto;max-width:42%;font-size:25px}
+  .focus-series{left:7%;top:420px;bottom:auto}
+  .focus-count{left:7%;top:448px;bottom:auto}
+  .focus-description{right:7%;top:385px;bottom:auto;width:42%;font-size:12px;line-height:1.65}
+  .focus-hint{right:7%;top:540px;bottom:auto;font-size:9px}
+}
+@media (max-width:560px){
+  .focus-name{top:345px;max-width:86%;font-size:23px}
+  .focus-series{top:378px}
+  .focus-count{top:405px}
+  .focus-description{left:7%;right:auto;top:442px;width:86%;max-width:none;font-size:12px}
+  .focus-hint{left:7%;right:auto;top:555px}
+}
+
+/* 四个展览主背景与晕染过渡 */
+body[data-theme="theology"]{--gallery-bg:url("assets/reference-display.png")}
+body[data-theme="arcana"]{--gallery-bg:url("assets/tarot-gallery-bg.png")}
+body[data-theme="anime-worlds"]{--gallery-bg:url("assets/anime-gallery-bg.png")}
+body[data-theme="other-works"]{--gallery-bg:url("assets/other-gallery-bg.png")}
+.gallery-backdrop{position:fixed;inset:0;z-index:0;overflow:hidden;background:#0b1016;pointer-events:none}
+.gallery-backdrop::before{content:"";position:absolute;inset:-2%;background-image:var(--gallery-bg);background-position:center;background-size:cover;opacity:1;transform:scale(1.02);filter:saturate(.92);transition:opacity 900ms cubic-bezier(.22,.61,.36,1),filter 1200ms cubic-bezier(.22,.61,.36,1),transform 1400ms cubic-bezier(.22,.61,.36,1)}
+.gallery-backdrop.is-changing::before{animation:backgroundBloom 1050ms cubic-bezier(.22,.61,.36,1) both}
+@keyframes backgroundBloom{0%{opacity:.18;filter:blur(18px) saturate(.58);transform:scale(1.07)}55%{opacity:.82;filter:blur(4px) saturate(.82);transform:scale(1.035)}100%{opacity:1;filter:blur(0) saturate(.92);transform:scale(1.02)}}
+.gallery-backdrop{z-index:0;opacity:1;transition:opacity 700ms cubic-bezier(.22,.61,.36,1)}
+.video-backdrop{display:block !important;opacity:0;transition:opacity 700ms cubic-bezier(.22,.61,.36,1)}
+body[data-theme="theology"] .gallery-backdrop{opacity:0}
+body[data-theme="theology"] .video-backdrop{opacity:1}
+body::before{background:rgba(8,14,18,.06)}
+.focus::before,.focus::after,
+.focus-stage::before,.focus-stage::after{display:none !important;content:none !important}
+.focus-stage > .focus-art,.focus-stage > .focus-info{position:absolute;z-index:10}
+.focus-stage > .focus-art{isolation:isolate}
+/* 聚焦页只保留一层真实作品，不再叠加暗色遮罩或亮度补偿。 */
+.focus,
+.focus.open,
+.focus .focus-stage,
+.focus .focus-art,
+.focus .focus-art .layer,
+.focus .focus-art .layer img,
+.focus .focus-flight,
+.focus .focus-flight img{
+  opacity:1 !important;
+  filter:none !important;
+  mix-blend-mode:normal !important;
+  backdrop-filter:none !important;
+}
+.focus-stage > .focus-art .layer,
+.focus-stage > .focus-art .layer img{
+  opacity:1 !important;
+  visibility:visible !important;
+  filter:none !important;
+  mix-blend-mode:normal !important;
+}
+body:has(.focus.open)::before{display:none !important;opacity:0 !important;visibility:hidden !important}
+body:has(.focus.open) .gallery-backdrop,
+body:has(.focus.open) .video-backdrop,
+body:has(.focus.open) .wall,
+body:has(.focus.open) .wall-tech{
+  opacity:0 !important;
+  visibility:hidden !important;
+}
+body:has(.focus.open) .focus-stage{
+  opacity:1 !important;
+  visibility:visible !important;
+  background-color:transparent !important;
+}
+.wall,.wall-tech{z-index:1;display:block;opacity:.22}
+.floor{background:linear-gradient(180deg,rgba(6,10,15,.18),rgba(6,10,15,.46))}
+.topbar.stuck{background:rgba(7,11,17,.58);backdrop-filter:blur(14px)}
+.focus[data-mode="direct"]{background:rgba(5,9,14,.3);backdrop-filter:blur(10px) saturate(.9)}
+.focus[data-mode="theology"] .focus-stage{
+  background-image:url("assets/reference-display.png");
+  background-size:100% 100%;
+  background-position:center;
+  box-shadow:0 22px 100px rgba(0,0,0,.48);
+}
+.focus[data-mode="direct"] .focus-stage{
+  background-image:var(--gallery-bg);
+  background-size:cover;
+  background-position:center;
+  box-shadow:0 22px 100px rgba(0,0,0,.48);
+}
+/* reference-display.png 自带一张示例画框；神学聚焦时只遮住这块，
+   保留四周的纸面、色块和水面，让当前作品成为唯一的中心画面。 */
+.focus[data-mode="theology"] .focus-stage::before{
+  content:"";
+  display:block !important;
+  position:absolute;
+  z-index:2;
+  left:35.6%;
+  top:13.2%;
+  width:28.8%;
+  height:70.6%;
+  background:rgba(5,10,16,.96);
+  pointer-events:none;
+}
+.focus{background:transparent !important;backdrop-filter:none !important}
+.focus.open,.focus.open .focus-stage{opacity:1 !important;visibility:visible !important}
+.focus-stage{filter:none !important;opacity:1 !important;isolation:isolate}
+.focus-art,.focus-art .layer,.focus-art .layer img,.focus-flight,.focus-flight img{
+  opacity:1 !important;
+  filter:none !important;
+  mix-blend-mode:normal !important;
+}
+.focus-art .layer,.focus-art .layer img,.focus-flight,.focus-flight img{background:transparent !important}
+.focus-info{background:transparent;padding:0;border-left:0;text-shadow:0 1px 3px rgba(255,255,255,.68);}
+.focus-name,.focus-description{color:#f5f1e7;text-shadow:inherit}
+.focus-series,.focus-count,.focus-hint{color:rgba(245,241,231,.78);text-shadow:inherit}
+.focus-name,.focus-series,.focus-count,.focus-description,.focus-hint{z-index:4}
+.focus-description{background:transparent;padding:0;border-left:0}
+.focus-name,.focus-series,.focus-count{background:transparent;padding:0}
+.focus-verse{margin:7px 0 0;padding:5px 0 5px 9px;border-left:1px solid rgba(23,38,45,.34);font-family:Georgia,'Times New Roman',serif;font-size:clamp(11px,.9vw,13px);font-style:italic;line-height:1.65;letter-spacing:.02em;color:rgba(23,38,45,.78);background:rgba(247,245,236,.42)}
+.focus[data-mode="theology"] .focus-verse{color:rgba(23,38,45,.78);background:rgba(247,245,236,.48);mix-blend-mode:multiply}
+.focus[data-mode="theology"] .focus-description{margin-top:8px;padding:5px 0 4px 9px;border-left:1px solid rgba(23,38,45,.18);font-size:clamp(11px,.86vw,13px);line-height:1.8;color:rgba(23,38,45,.68);background:rgba(247,245,236,.3);mix-blend-mode:multiply}
+.focus .layer{transition:transform 620ms cubic-bezier(.22,.61,.36,1);transform:scale(.985)}
+.focus .layer img,#focusArt img,.focus-flight img{
+  opacity:1 !important;
+  visibility:visible !important;
+  filter:none !important;
+  mix-blend-mode:normal !important;
+}
+/* 子元素为了进场而保持 visible，关闭后必须让整个聚焦树退出布局，
+   否则 visibility:hidden 会被图片自身的 !important 覆盖，造成残影。 */
+.focus:not(.open){display:none !important}
+.focus-name,.focus-description{
+  color:#17262d !important;
+  text-shadow:none;
+  background:rgba(247,245,236,.86);
+  padding:4px 8px;
+}
+.focus-series,.focus-count,.focus-hint{
+  color:#174fd2 !important;
+  text-shadow:none;
+  background:rgba(247,245,236,.78);
+  padding:3px 6px;
+}
+.focus.open .layer{transform:scale(1)}
+.focus .layer.is-leaving{transform:scale(1.025)}
+.focus .layer.is-entering{transform:scale(.975)}
 </style>
+<!-- GSAP：动效的唯一外部依赖（DESIGN_V5 §12）。先取本地固定版本，取不到再退 CDN。 -->
+<script src="vendor/gsap.min.js"></script>
 </head>
-<body data-theme="arcana">
+<body data-theme="theology">
+<div class="gallery-backdrop" id="galleryBackdrop" aria-hidden="true"></div>
+
+<video class="video-backdrop" autoplay muted loop playsinline preload="metadata" aria-hidden="true">
+  <source src="assets/sacred-grid-loop.mp4" type="video/mp4">
+</video>
 
 <!-- 墙层：全程零位移 -->
 <div class="wall" aria-hidden="true"></div>
@@ -747,18 +1519,15 @@ body{
   <span class="signal signal-a">X-07 // Δ 03 : 71.4°</span>
   <span class="signal signal-b">NO. 04 / FIELD TRACE</span>
   <span class="signal signal-c">φ 1.618 / AXIS 02 / 2026</span>
-  <svg class="network" viewBox="0 0 1440 820" preserveAspectRatio="none">
-    <path d="M0 170L238 170L372 302L565 302L721 126L936 126L1112 286L1440 286"/>
-    <path d="M0 584L188 584L350 432L534 432L721 626L884 626L1067 468L1260 468L1440 558"/>
-    <path class="accent" d="M238 170L350 432L565 302L721 626L936 126L1067 468L1112 286"/>
-    <path d="M372 302L372 92L565 92L565 302M884 626L884 738L1112 738L1112 286"/>
-    <circle cx="238" cy="170" r="4"/><circle cx="372" cy="302" r="5"/>
-    <circle cx="565" cy="302" r="3"/><circle cx="721" cy="126" r="6"/>
-    <circle cx="721" cy="626" r="4"/><circle cx="936" cy="126" r="3"/>
-    <circle cx="1067" cy="468" r="5"/><circle cx="1112" cy="286" r="4"/>
-    <rect x="230" y="162" width="16" height="16" fill="none" stroke="rgba(35,40,39,.45)"/>
-    <rect x="1103" y="277" width="18" height="18" fill="none" stroke="rgba(35,40,39,.45)"/>
-  </svg>
+  <div class="raster-stage">
+    <img class="raster-dome" src="images/studies/配图-实战-科幻.png" alt="">
+    <img class="raster-gate" src="images/theology/配图-实战-神学-巴别塔.png" alt="">
+    <img class="raster-orbit" src="images/studies/配图-实战-梦幻星空中的蓝鲸之旅.png" alt="">
+    <img class="raster-figure" src="images/atelier/配图-实战-构图.png" alt="">
+    <img class="raster-doves" src="images/studies/配图-实战-夜空下的宇宙鲸泳.png" alt="">
+    <i class="raster-scan"></i>
+    <canvas class="ambient-canvas" id="ambientCanvas" aria-hidden="true"></canvas>
+  </div>
 </div>
 
 <!-- ===== 揭幕 F-01：画面上只能有色块、字标、细线三样（AC-02）===== -->
@@ -802,14 +1571,14 @@ body{
       <h2 class="focus-name" id="focusName"></h2>
       <p class="focus-series" id="focusSeries"></p>
       <p class="focus-count" id="focusCount"></p>
+      <p class="focus-verse" id="focusVerse"></p>
+      <p class="focus-description" id="focusDescription"></p>
       <p class="focus-hint">← → TO BROWSE　·　ESC TO CLOSE</p>
     </div>
   </div>
   <button class="nav-btn prev" id="prevBtn" type="button" aria-label="Previous">
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M10 2L4 8l6 6"/></svg>
   </button>
   <button class="nav-btn next" id="nextBtn" type="button" aria-label="Next">
-    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2l6 6-6 6"/></svg>
   </button>
 </section>
 
@@ -818,45 +1587,146 @@ body{
   'use strict';
 
   /* ========================================================================
-     数据 · 六个主题（DESIGN_V5 §2.3）
+     数据 · 六个主题
      ------------------------------------------------------------------------
      · 分类按【主题】，材质降为属性字段 material（不参与导航、不显示为文字）
-     · 序号是作者策展顺序。v5 方案甲：位次永按策展序，热度只改【入场先后】
-     · slot：该主题的展位数 = 策展决定。目前只有 ARCANA 挂上了真图，
-       其余主题保留【空装裱】—— 展位不因为有图没图而增删。
-     · 作品名/系列名是【内容】，不计入「界面文案 ≤40 词」（AC-31）
+     · 作品按主题和视觉语言重新归类，六组共 63 张真实图片
+     · note 是聚焦视图中的中文作品解说，展墙只显示英文标题与分类
      ====================================================================== */
-  var SERIES = [
-    { id:'arcana',     name:'ARCANA',     slot:4, works:[
-      { name:'THE MOON',  img:'images/arcana/moon.jpg',  material:'print',
-        note:'月之牌 · 潜意识与倒影。中轴对称稳住画面，唯一的金色月轮只此一处，占主角位。' },
-      { name:'THE STAR',  img:'images/arcana/star.jpg',  material:'print',
-        note:'星辰牌 · 希望与灌溉。两条水弧从对角线方向汇入中央，把视线锁回人物。' },
-      { name:'THE SUN',   img:'images/arcana/sun.jpg',   material:'print',
-        note:'太阳牌 · 完满与敞开。放射线从圆心向外扩散，向日葵做底，把人物托到光中央。' },
-      { name:'THE WORLD', img:'images/arcana/world.jpg', material:'print',
-        note:'世界牌 · 完成与循环。月桂花环作闭合圆，四角兽首压角，人物占据圆心。' }
+  var SOURCE_SERIES = [
+    { id:'symbolic-worlds', name:'SYMBOLIC WORLDS', slot:4, works:[
+      { name:'THE FOOL', img:'images/arcana/01_愚者_0_THE-FOOL_494x741.png', material:'print', note:'轻装上路的人站在悬崖边，脚下的空白既像危险，也像尚未写下的命运。' },
+      { name:'THE MAGICIAN', img:'images/arcana/02_魔术师_I_THE-MAGICIAN_494x741.png', material:'print', note:'桌面上的四种器物把意志、资源与行动聚到一起，魔术从“开始动手”发生。' },
+      { name:'THE EMPEROR', img:'images/arcana/03_皇帝_IV_THE-EMPEROR_494x741.png', material:'print', note:'厚重座椅和硬朗线条建立秩序感，权力在这里首先表现为边界与结构。' },
+      { name:'THE HIEROPHANT', img:'images/arcana/04_教皇_V_THE-HIEROPHANT_494x741.png', material:'print', note:'中心人物被两侧侍从与拱门托起，画面讨论的是传统如何被传递和继承。' },
+      { name:'THE HANGED MAN', img:'images/arcana/05_倒吊人_XII_THE-HANGED-MAN_494x741.png', material:'print', note:'倒置的身体暂停了常规视角，悬挂不再是惩罚，而是一种主动换位的观看。' },
+      { name:'TEMPERANCE', img:'images/arcana/06_节制_XIV_TEMPERANCE_494x741.png', material:'print', note:'两只容器之间的流动形成柔和的平衡，克制让不同力量在同一条线上共存。' },
+      { name:'JUDGEMENT', img:'images/arcana/08_审判_XX_JUDGEMENT_494x741.png', material:'print', note:'向上升起的形体与远处的号角构成召唤感，审判更像一次重新醒来的机会。' },
+      { name:'THE DEVIL', img:'images/arcana/配图-实战-塔罗牌-恶魔.png', material:'print', note:'暗色中心牢牢吸住视线，束缚通过重复的链条和欲望的光泽被具象化。' },
+      { name:'THE EMPRESS', img:'images/arcana/配图-实战-塔罗牌-皇后_III.png', material:'print', note:'丰盛的植物、织物与柔软曲线围绕人物展开，生命力从装饰细节中不断溢出。' },
+      { name:'STRENGTH', img:'images/arcana/配图-实战-塔罗牌-力量.png', material:'print', note:'人物没有压制野兽，而是以平静姿态与它相对，力量因此被画成温柔的控制。' },
+      { name:'THE LOVERS', img:'images/arcana/配图-实战-塔罗牌-恋人.png', material:'print', note:'两个人物被同一束光连接，选择、欲望与关系在对称构图里彼此牵引。' },
+      { name:'WHEEL OF FORTUNE', img:'images/arcana/配图-实战-塔罗牌-命运之轮.png', material:'print', note:'旋转的轮盘把人物、动物和符号推入循环，命运表现为不断改变位置的系统。' },
+      { name:'THE HIGH PRIESTESS', img:'images/arcana/配图-实战-塔罗牌-女祭司.png', material:'print', note:'帷幕、月相与静坐人物共同守住秘密，沉默本身成为这张牌最强的视觉语言。' },
+      { name:'THE WORLD', img:'images/arcana/配图-实战-塔罗牌-世界.png', material:'print', note:'闭合的花环把四方力量收拢到中心，完成不是终点，而是一次完整的循环。' },
+      { name:'DEATH', img:'images/arcana/配图-实战-塔罗牌-死神.png', material:'print', note:'骑士穿过层层人群，黑白对照把结束从恐惧中抽离，转化为明确的阶段更替。' },
+      { name:'THE TOWER', img:'images/arcana/配图-实战-塔罗牌-塔.png', material:'print', note:'高塔被闪电从顶部击穿，稳定的结构在一瞬间暴露出自身的脆弱。' },
+      { name:'THE SUN', img:'images/arcana/配图-实战-塔罗牌-太阳.png', material:'print', note:'巨大的太阳压住画面上方，人物与花朵向光展开，明亮是一种没有遮掩的确认。' },
+      { name:'THE STAR', img:'images/arcana/配图-实战-塔罗牌-星星.png', material:'print', note:'人物把水倒向土地与水面，星群在上方回应，补给和希望由同一条流线连接。' },
+      { name:'THE HERMIT', img:'images/arcana/配图-实战-塔罗牌-隐士.png', material:'print', note:'孤独的行者只携一盏灯前进，四周的留白让寻找变成一种内向的运动。' },
+      { name:'THE MOON', img:'images/arcana/配图-实战-塔罗牌-月亮.png', material:'print', note:'双塔、双狼与水面共同构成夜的入口，月光照亮道路，也保留了不确定性。' },
+      { name:'THE CHARIOT', img:'images/arcana/配图-实战-塔罗牌-战车.png', material:'print', note:'前进的车体由两股相反力量拉动，驾驭不是消除冲突，而是让它们共同向前。' },
+      { name:'JUSTICE', img:'images/arcana/配图-实战-塔罗牌-正义.png', material:'print', note:'秤与剑形成清晰的垂直轴，判断被处理成一种冷静、可被看见的平衡。' },
+      { name:'ORDER OF EGYPT', img:'images/studies/配图-实战-埃及-秩序.png', material:'print', note:'古老图腾与规整网格叠合在一起，神圣秩序像一台精密仪器持续运转。' },
+        { name:'GENESIS I', img:'images/theology/配图-实战-神学-创世纪.jpg', material:'print', verse:'“要有光，就有了光。”（创世记 1:3）', note:'起初，神创造天地，地是空虚混沌，渊面黑暗。神发命令说要有光，光便从黑暗中分开；祂又使水聚在一处，使旱地显露，叫日月星辰各按时候运行。万物不是从偶然而来，乃是在祂的话语中各归其位。' },
+        { name:'GENESIS II', img:'images/theology/配图-实战-神学-创世纪2.jpg', material:'print', verse:'“神就照着自己的形像造人。”（创世记 1:27）', note:'神造出青草、结种子的菜蔬和结果子的树，又造飞鸟、走兽与海中的活物。到了第六日，祂用地上的尘土造人，将生气吹在他鼻孔里，使他成为有灵的活人，并把管理受造之物的托付交给他。世界在祝福中展开，人也在园中承受看守与治理的使命。' },
+        { name:'FALLEN ANGEL', img:'images/theology/配图-实战-神学-堕天使.png', material:'print', verse:'“你何竟从天坠落，明亮之星，早晨之子！”（以赛亚书 14:12）', note:'那受造的灵本在荣光之中，却因心里高傲，竟要高举自己的宝座，与至高者同等。于是美丽变为羞辱，光明之子离开本位，翅膀向幽暗坠落。骄傲使受造之物忘记自己不过是受造之物。' },
+        { name:'EXILE FROM EDEN', img:'images/theology/配图-实战-神学-逐出伊甸.png', material:'print', verse:'“你本是尘土，仍要归于尘土。”（创世记 3:19）', note:'女人听了蛇的话，男人也吃了那分别善恶树的果子；他们的眼睛明亮了，便知道自己赤身露体。神在园中寻找他们，他们躲藏起来，罪使人与神隔绝。园门在身后合拢，基路伯守住生命树的道路；然而神仍以皮子遮盖他们，为将来的怜悯留下记号。' },
+        { name:'CAIN AND ABEL', img:'images/theology/配图-实战-神学-该隐与亚伯.png', material:'print', verse:'“你兄弟的血，有声音从地里向我哀告。”（创世记 4:10）', note:'该隐种地，亚伯牧羊；二人各自将供物献给耶和华。亚伯和他的供物蒙悦纳，该隐却发怒变了脸色。神警告他说，罪就伏在门前，必恋慕他，他却要制伏罪。只是该隐把弟弟带到田间，举手杀了他；血声从地里上达于神，该隐从此成为流离飘荡的人。' },
+        { name:'THE ARK', img:'images/theology/配图-实战-神学-方舟.png', material:'print', verse:'“挪亚就遵着耶和华所吩咐的行了。”（创世记 7:5）', note:'世人终日所思想的尽都是恶，惟有挪亚在耶和华眼前蒙恩。神吩咐他用歌斐木造方舟，带着妻子、儿子和儿妇，并各样活物进入其中。四十昼夜大雨倾下，水势上涨，地上的气息尽都断绝；方舟却在水面上漂行，存留了生命。' },
+        { name:'TOWER OF BABEL', img:'images/theology/配图-实战-神学-巴别塔.png', material:'print', verse:'“我们要建造一座城和一座塔，塔顶通天。”（创世记 11:4）', note:'洪水以后，世人住在示拿平原，彼此同语同言。他们用砖代替石头，彼此商量说，要建造一座城和一座塔，为要传扬自己的名，免得分散在全地。耶和华看见人的骄傲，就变乱他们的口音，使他们彼此不能相通；城因此称为巴别，人也从那里分散到各地。' },
+        { name:'CALLING AND COVENANT', img:'images/theology/配图-实战-神学-蒙召立约.png', material:'print', verse:'“你要离开本地、本族、父家，往我所要指示你的地去。”（创世记 12:1）', note:'耶和华呼召亚伯兰离开本地、本族和父家，往祂所要指示的地去，并应许使他成为大国，叫他的名为大。亚伯兰没有先看见道路，便带着撒莱和一切所有的起行；他住在帐棚里，在应许之地筑坛求告耶和华，以一生的脚步回应那看不见的呼召。' },
+        { name:'THE BINDING OF ISAAC', img:'images/theology/配图-实战-神学-以撒的捆绑.png', material:'print', verse:'“神必自己预备作燔祭的羊羔。”（创世记 22:8）', note:'神试验亚伯拉罕，叫他带着独生的儿子以撒往摩利亚山去献为燔祭。父子一同上山，以撒问羊羔在哪里，亚伯拉罕回答说神必自己预备。祭坛筑好，柴摆上，刀也举起；天上的使者呼叫他不可伤害童子，亚伯拉罕抬头看见一只公羊，便献上为祭，称那地方为耶和华以勒。' },
+        { name:'JACOB\'S LADDER', img:'images/theology/配图-实战-神学-天梯.png', material:'print', verse:'“我与你同在，你无论往哪里去，我必保佑你。”（创世记 28:15）', note:'雅各离开别是巴，独自走在旷野，夜里以一块石头作枕头。他梦见一个梯子立在地上，梯顶通天，神的使者在其上去下。耶和华站在梯以上，重申给亚伯拉罕的应许，并应许与他同在。雅各醒来，知道这地方可畏，便立石为柱，称那里为伯特利。' },
+        { name:'PENIEL', img:'images/theology/配图-实战-神学-毗努伊勒.png', material:'print', verse:'“我面对面见了神，我的性命仍得保全。”（创世记 32:30）', note:'雅各听见以扫带着四百人迎面而来，便在雅博渡口把家人送过河，独自留下。夜间有一人来和他摔跤，直到黎明；那人摸了他的大腿窝，使他瘸了，却也为他改名叫以色列。雅各不肯放手，求那人给他祝福；天亮时，他说自己面对面见了神，性命仍得保全。' },
+        { name:'JOB', img:'images/theology/配图-实战-神学-约伯.png', material:'print', verse:'“我从前风闻有你，现在亲眼看见你。”（约伯记 42:5）', note:'约伯本为完全正直、敬畏神的人，却在一日之间失去儿女、牲畜和财物，身上又长满毒疮。他的朋友轮番解释苦难，约伯仍坚持向神申诉；后来耶和华从旋风中回答他，使他看见受造之物远超过人的测度。约伯在尘土和炉灰中悔改，神使他末后的景况胜过先前。' },
+        { name:'THE BURNING BUSH', img:'images/theology/配图-实战-神学-燃烧的荆棘.png', material:'print', verse:'“我是自有永有的。”（出埃及记 3:14）', note:'摩西在米甸旷野牧放岳父的羊，来到何烈山，看见荆棘被火烧着却没有烧毁。他转身观看，神从荆棘中呼叫他的名字，吩咐他脱下鞋，因为所站之地是圣地。神记念以色列人在埃及所受的苦，差摩西去见法老，并以“我是自有永有的”显明自己的名。' },
+        { name:'PASSOVER', img:'images/theology/配图-实战-神学-逾越节.png', material:'print', verse:'“这血要在你们所住的房屋上作记号。”（出埃及记 12:13）', note:'以色列人在埃及寄居多年，法老仍不肯让他们去。神吩咐各家取无残疾的羊羔，宰杀它，把血涂在门框和门楣上，并在夜间吃羊羔的肉。那夜耶和华击杀埃及地一切长子，却越过有血为记号的房屋；百姓束上腰带，带着无酵饼，在黑暗中预备离开为奴之地。' },
+        { name:'CROSSING THE RED SEA', img:'images/theology/配图-实战-神学-红海.png', material:'print', verse:'“耶和华使海水一夜退去。”（出埃及记 14:21）', note:'以色列人出了埃及，法老却带着车马追赶他们。百姓看见前有红海、后有军兵，就惧怕呼求；摩西说，只管站住，看耶和华今日向你们所要施行的救恩。摩西向海伸杖，海水分开，百姓走干地而过，水在左右作了墙垣；追赶的埃及军兵全被海水淹没。' },
+        { name:'MOUNT SINAI', img:'images/theology/配图-实战-神学-西奈山.png', material:'print', verse:'“我是耶和华你的神，曾将你从埃及地为奴之家领出来。”（出埃及记 20:2）', note:'以色列人来到西奈旷野，山上有雷轰、闪电和密云，角声甚大。耶和华在火中降临，召摩西上山，与百姓立约，宣告不可有别的神，不可拜偶像，也当守安息日、孝敬父母。山在震动，百姓站在远处；他们知道自己已经从奴仆之地被领出来，如今要成为属神的子民。' },
+        { name:'THE NATIVITY', img:'images/theology/配图-实战-神学-降生.png', material:'print', verse:'“今天在大卫的城里，为你们生了救主，就是主基督。”（路加福音 2:11）', note:'约瑟带着马利亚从拿撒勒往伯利恒报名上册，到了时候，马利亚生下头生的儿子，用布包起来，放在马槽里，因为客店没有地方。夜间牧羊人在野地看守羊群，天使向他们报信，天军同声赞美神；他们急忙去看那婴孩，知道救主已经在卑微之处来到世间。' },
+        { name:'THE WILDERNESS TEMPTATION', img:'images/theology/配图-实战-神学-荒野试探.png', material:'print', verse:'“人活着，不是单靠食物，乃是靠神口里所出的一切话。”（马太福音 4:4）', note:'耶稣受洗以后，被圣灵引到旷野，禁食四十昼夜，后来就饿了。那试探人的来到祂面前，叫祂把石头变作食物，又带祂站在殿顶试探神，还指给祂世上的万国和万国的荣华。耶稣每一次都以经上的话回答，拒绝离开父的旨意；试探既毕，天使来伺候祂。' },
+        { name:'THE PRODIGAL SON', img:'images/theology/配图-实战-神学-浪子回头.png', material:'print', verse:'“相离还远，他父亲看见，就动了慈心。”（路加福音 15:20）', note:'小儿子向父亲要了产业，往远方去，在任意放荡中耗尽一切。那地遭遇饥荒，他只得替人放猪，连猪所吃的豆荚也无人给他。他醒悟过来，起身回到父家，预备承认自己的罪。父亲远远看见他，就跑去抱着他的颈项；他吩咐仆人拿上好的袍子、戒指和鞋，又宰了肥牛犊，因为这儿子是死而复活、失而又得的。' },
+        { name:'THE LAST SUPPER', img:'images/theology/配图-实战-神学-最后的晚餐.png', material:'print', verse:'“这是我的身体，为你们舍的；你们也应当如此行，为的是记念我。”（路加福音 22:19）', note:'逾越节的筵席来到，耶稣和门徒一同坐席。祂拿起饼来祝谢，擘开递给他们，说这是为他们舍的身体；饭后又拿起杯，说这杯是用祂的血所立的新约。门徒尚不明白将要发生的事，主却知道自己将被交在罪人手里，仍以爱坐在他们中间。' },
+        { name:'JUDGMENT BEFORE THE CROSS', img:'images/theology/配图-实战-神学-十字架前的审判.png', material:'print', verse:'“看哪，这个人！”（约翰福音 19:5）', note:'耶稣被带到彼拉多面前，祭司长和差役控告祂。彼拉多查不出祂有什么罪，却因众人的喊声渐渐退让；兵丁给祂穿上紫袍，戴上荆棘冠冕。审判者把祂带出来，说“看哪，这个人”，群众却喊着要把祂钉十字架；真理站在沉默中，人的惧怕却把无罪者交了出去。' },
+        { name:'CALVARY', img:'images/theology/配图-实战-神学-各各他.png', material:'print', verse:'“成了。”（约翰福音 19:30）', note:'耶稣背着自己的十字架来到各各他，兵丁把祂钉在那里，左右又钉了两个罪犯。祂为钉祂的人求赦免，把母亲交托给门徒；从午正到申初，遍地都黑暗了。祂尝了醋，就说成了，便低下头，将灵魂交付神。' },
+        { name:'THE EMPTY TOMB', img:'images/theology/配图-实战-神学-空墓.png', material:'print', verse:'“他不在这里，已经复活了。”（路加福音 24:6）', note:'七日的头一日清早，妇女们带着所预备的香料来到坟墓，看见石头已经从墓门滚开。她们进去，却不见主耶稣的身体；有两个人站在旁边告诉她们，为什么在死人中找活人，祂不在这里，已经复活了。妇女们回去报信，门徒起初以为是胡言，后来却亲眼看见复活的主。' },
+        { name:'THE ASCENSION', img:'images/theology/配图-实战-神学-升天.png', material:'print', verse:'“你们要作我的见证，直到地极。”（使徒行传 1:8）', note:'复活以后，耶稣向门徒显现四十日，讲说神国的事。祂吩咐他们不要离开耶路撒冷，要等候父所应许的圣灵；说完这话，祂在他们眼前被接上升，有一朵云彩把祂接去。门徒仍望着天，天使告诉他们，祂怎样往天上去，也要怎样回来。' },
+        { name:'PENTECOST', img:'images/theology/配图-实战-神学-圣灵降临.png', material:'print', verse:'“他们就都被圣灵充满。”（使徒行传 2:4）', note:'五旬节到了，门徒都聚集在一处。忽然从天上有响声下来，好像一阵大风吹过，又有舌头如火焰显现，分开落在各人头上。他们就都被圣灵充满，按着圣灵所赐的口才说起别国的话；从天下各处来的虔诚人听见自己的乡谈，众人惊讶，教会便在那日兴起。' },
+        { name:'EZEKIEL\'S WHEEL', img:'images/theology/配图-实战-神学-以西结之轮.png', material:'print', verse:'“这就是活物的形像，我就知道是基路伯。”（以西结书 10:20）', note:'以西结在迦巴鲁河边看见从北方来的暴风，有火随之发出，四个活物在火中往来。活物旁各有轮子，轮中套轮，轮的周围满有眼睛；它们随灵往来，不转身而行。先知在被掳之地看见耶和华的荣耀，知道神的手仍在历史之上。' },
+        { name:'THRONE ANGELS', img:'images/theology/配图-实战-神学-座天使.png', material:'print', verse:'“圣哉！圣哉！圣哉！万军之耶和华。”（以赛亚书 6:3）', note:'乌西雅王崩的那年，以赛亚看见主坐在高高的宝座上，衣裳垂下，充满圣殿。撒拉弗各有六个翅膀，彼此呼喊圣哉，门槛的根基因声音震动，殿充满了烟云。先知因看见自己的污秽而战兢，炭火沾他的嘴唇，他便听见主说，谁肯为我们去；他回答说，我在这里，请差遣我。' },
+        { name:'THE LAST JUDGMENT', img:'images/theology/配图-实战-神学-最后审判.png', material:'print', verse:'“死了的人都凭着这些案卷所记的，照他们所行的受审判。”（启示录 20:12）', note:'约翰看见一个白色的大宝座，又看见死了的人，无论大小，都站在宝座前。案卷展开，另有一卷生命册；死人都凭着案卷所记的、照各人所行的受审判。死亡和阴间也被扔在火湖里，旧有的黑暗在公义的光中显露并止息。' },
+        { name:'THE NEW JERUSALEM', img:'images/theology/配图-实战-神学-新耶路撒冷.png', material:'print', verse:'“神要亲自与他们同在，作他们的神。”（启示录 21:3）', note:'约翰看见新天新地，又看见圣城新耶路撒冷从天而降，预备好了，就如新妇妆饰整齐，等候丈夫。神的帐幕在人间，祂要擦去人一切的眼泪；不再有死亡、悲哀、哭号和疼痛。城中有生命水的河和生命树，神的众仆人要侍奉祂，直到永永远远。' }
     ]},
-    { id:'sleight',    name:'SLEIGHT',    slot:4, works:[] },
-    { id:'unreal',     name:'UNREAL',     slot:4, works:[] },
-    { id:'limbo',      name:'LIMBO',      slot:4, works:[] },
-    { id:'world-line', name:'WORLD LINE', slot:4, works:[] },
-    { id:'fifty-two',  name:'FIFTY-TWO',  slot:4, works:[] }
+    { id:'screen-dreams', name:'SCREEN DREAMS', slot:4, works:[
+      { name:'INCEPTION / SECOND ROOM', img:'images/cinema/配图-实战-盗梦空间2.png', material:'print', note:'倾斜的建筑和被折叠的空间让梦境失去重力，现实只剩下一层可被改写的外壳。' },
+      { name:'HER', img:'images/cinema/配图-实战-电影her.png', material:'print', note:'温暖的色调包住人物的孤独，亲密关系在看不见的声音与可见的城市之间展开。' },
+      { name:'PAPRIKA', img:'images/cinema/配图-实战-红辣椒-梦幻.png', material:'print', note:'鲜艳角色穿过彩色梦境，现实物件被重新组合成一场自由而危险的游行。' },
+      { name:'LOVE IN THE BOUQUET', img:'images/cinema/配图-实战-花束般的恋爱2-留白.png', material:'print', note:'大面积留白把两个人的距离放大，日常关系在安静的空隙里显出重量。' },
+      { name:'AMERICAN PSYCHO / CARD', img:'images/cinema/配图-实战-美国精神病人-雨衣名片.png', material:'print', note:'名片、雨衣与冷硬的红色构成身份表演，体面的表面下藏着不稳定的欲望。' },
+      { name:'TIME AGENT / FILM CLOCK', img:'images/cinema/配图-实战-时光代理人：胶片与钟表之约.png', material:'print', note:'胶片格与钟表刻度彼此咬合，时间在这里既能保存，也能被重新剪接。' },
+      { name:'TIME AGENT / PAST FRAME', img:'images/cinema/配图-实战-时光代理人：照片中的过去.png', material:'print', note:'照片成为进入过去的窄门，人物被固定在影像里，却仍保留着未说完的情绪。' },
+      { name:'SUMMER FRAME', img:'images/cinema/配图-实战-夏日.png', material:'print', note:'明亮的夏日色块制造轻盈表面，人物与风景之间保留着一段适合回忆的距离。' },
+      { name:'INTERSTELLAR', img:'images/cinema/配图-实战-星际穿越.png', material:'print', note:'深空背景与微小的人形成比例反差，远行因此既像科学任务，也像情感冒险。' },
+      { name:'END FIELD', img:'images/cinema/配图-实战-游戏-明日方舟终末地2.png', material:'print', note:'角色、装备与荒凉地貌被切成多层叙事，末日世界仍然保留着行动的方向。' }
+    ]},
+    { id:'character-atelier', name:'CHARACTER ATELIER', slot:4, works:[
+      { name:'FASHION STUDY / I', img:'images/atelier/配图-实战-服装设计.png', material:'print', note:'人物被织物、羽饰和金属细节包围，服装不只是装饰，而是角色气质的外化。' },
+      { name:'FASHION STUDY / II', img:'images/atelier/配图-实战-服装设计2.png', material:'print', note:'不同人物共享同一画面，颜色和轮廓像舞台服装一样为每种性格分配位置。' },
+      { name:'COMPOSITION / FIGURES', img:'images/atelier/配图-实战-构图.png', material:'print', note:'人物群像沿对角线展开，视线被服饰纹理牵引，在拥挤中保持了清楚的层次。' },
+      { name:'MAXIMALISM / I', img:'images/atelier/配图-实战-极繁主义-服装设计.png', material:'print', note:'花纹、羽毛与珠饰不断叠加，极繁不是堆满画面，而是让细节拥有自己的节奏。' },
+      { name:'MAXIMALISM / II', img:'images/atelier/配图-实战-极繁主义-服装设计2.png', material:'print', note:'暗色服装与亮色背景形成强烈碰撞，人物像从装饰性风暴里被切出来。' },
+      { name:'JAPANESE SILHOUETTE', img:'images/atelier/配图-实战-日式服装设计.png', material:'print', note:'简洁轮廓、层叠布料和留白共同建立东方气质，身体在静止中显出动作预感。' },
+      { name:'CRIMSON KIMONO', img:'images/atelier/result-1 (29).png', material:'print', note:'红黑和服、樱花与金色饰物层层展开，人物像从一场春日仪式中缓慢回望。' },
+      { name:'REI / NEON GENESIS', img:'images/atelier/result-1 (33).png', material:'print', note:'冷蓝天空与白色装甲形成清晰反差，角色被放在末世建筑和个人记忆之间。' },
+      { name:'ASUKA / EVA-02', img:'images/atelier/result-1 (34).png', material:'print', note:'鲜红机体与橙色头发把画面推向高能状态，人物的锋利感来自姿态与色彩共同施压。' },
+      { name:'MOONLIT WITCH', img:'images/atelier/配图-实战-我的游戏人设而已。。.png', material:'print', note:'蝴蝶、古堡与月光围绕持书的魔女展开，幻想世界在明亮背景中留下柔软的入口。' },
+      { name:'RONIN / COLLAGE', img:'images/studies/配图-实战-浪人（波点艺术+拼贴艺术）.png', material:'print', note:'浪人的姿态被波点和纸片切开，传统形象在拼贴中获得了新的速度感。' },
+      { name:'SAMURAI / COLLAGE', img:'images/studies/配图-实战-武士（波点艺术+拼贴艺术）.png', material:'print', note:'武士轮廓被重复图形包围，沉静的身体与跳跃的表面形成一种有张力的平衡。' }
+    ]},
+    { id:'illusion-construction', name:'ILLUSION & CONSTRUCTION', slot:4, works:[
+      { name:'PHANTOM DEAL', img:'images/sleight/配图-实战-惊天魔盗团：幻影牌局.png', material:'print', note:'扑克牌、眼睛和碎片化人物交错排列，观看像一场不断被转移焦点的魔术。' },
+      { name:'CONSTRUCTIVIST HEIST', img:'images/sleight/配图-实战-惊天魔盗团（构成主义）.jpg', material:'print', note:'斜切色块和强烈文字把行动拆成几何指令，电影海报被处理成一台视觉机器。' },
+      { name:'P3R / SHADOW TRICK', img:'images/sleight/配图-实战-惊天魔盗团（P3R）.png', material:'print', note:'冷色人物与锋利构图制造悬念，阴影像另一组角色，始终在画面边缘伺机出现。' },
+      { name:'P5R / RED SIGNAL', img:'images/sleight/配图-实战-惊天魔盗团（P5R）.png', material:'print', note:'红黑对撞和撕裂文字建立强烈节奏，叛逆感通过版面方向而不是单一符号传达。' },
+      { name:'CUBIST HEIST', img:'images/sleight/配图-实战-惊天魔盗团2-立体主义.png', material:'print', note:'人物、牌面和城市被拆成多个观看角度，立体主义让同一场骗局同时发生在不同平面。' }
+    ]},
+    { id:'cosmic-tides', name:'COSMIC TIDES', slot:4, works:[
+      { name:'SCI-FI / ORBITAL CITY', img:'images/studies/配图-实战-科幻.png', material:'print', note:'机械结构与远方天体叠在一起，未来感来自尺度的错位和未知空间的留白。' },
+      { name:'WHALE / STAR JOURNEY', img:'images/studies/配图-实战-梦幻星空中的蓝鲸之旅.png', material:'print', note:'鲸鱼漂浮在星海与巨大球体之间，海洋和宇宙被想象成同一片可以呼吸的空间。' },
+      { name:'WHALE / NIGHT SWIM', img:'images/studies/配图-实战-夜空下的宇宙鲸泳.png', material:'print', note:'夜空中的鲸群像缓慢移动的星座，低处的人影让这场奇观回到安静的观看现场。' }
+    ]},
+    { id:'color-lab', name:'COLOR LAB', slot:4, works:[
+      { name:'OIL PAINT / MATERIAL STUDY', img:'images/studies/配图-实战-油画.png', material:'print', note:'厚重笔触和层层叠开的颜料保留了手工痕迹，颜色像材料一样拥有触感。' },
+      { name:'F1 / ACID CIRCUIT', img:'images/studies/配图-实战-f1-酸性.png', material:'print', note:'荧光色、速度线和机械部件互相推挤，赛道被转译成一块高饱和度的实验屏幕。' },
+      { name:'LOVE / SIGNAL', img:'images/studies/配图-实战-LOVE.png', material:'print', note:'巨大的 LOVE 字样与人物、花朵和强色背景叠合，情感被处理成可以远距离读取的信号。' }
+    ]}
   ];
-  /* ★ note 字段保留但【不渲染】：
-     个人规则 B 要求站点界面文案一律英文（中文不进页面），
-     PRD §6.3 也禁止说明性段落 —— 两者都指向「说明文字不上页面」。
-     但它是你写的作品说明，删掉就找不回来了，所以留在数据里备用。 */
+  var allWorks = SOURCE_SERIES.reduce(function(all, series){
+    return all.concat(series.works);
+  }, []);
+  function worksFrom(predicate){
+    return allWorks.filter(function(work){ return predicate(work.img); });
+  }
+  var SERIES = [
+    { id:'theology', name:'THEOLOGY', slot:4, works:worksFrom(function(img){ return img.indexOf('images/theology/') === 0; }) },
+    { id:'arcana', name:'ARCANA', slot:4, works:worksFrom(function(img){ return img.indexOf('images/arcana/') === 0; }) },
+    { id:'anime-worlds', name:'ANIME WORLDS', slot:4, works:worksFrom(function(img){
+      /* 只保留明确的二次元角色/动画作品；电影海报、构成主义海报和拼贴研究统一归入 OTHER WORKS。 */
+      return img.indexOf('images/atelier/') === 0 ||
+        /红辣椒|时光代理人|夏日|明日方舟/.test(img);
+    }) },
+    { id:'other-works', name:'OTHER WORKS', slot:4, works:worksFrom(function(img){
+      return img.indexOf('images/studies/') === 0 ||
+        img.indexOf('images/sleight/') === 0 ||
+        /盗梦空间|电影her|花束般的恋爱|美国精神病人|星际穿越/.test(img);
+    }) }
+  ];
+   /* note 与 verse 只在聚焦校样台中出现，避免展墙文字压住作品。 */
 
   var $  = function(s){ return document.querySelector(s); };
   var $$ = function(s){ return Array.prototype.slice.call(document.querySelectorAll(s)); };
-  var REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  /* 低动态判定。此前这里被硬编码成 true —— 后果是全部补间被整段跳过，
+     聚焦切换退化成硬切。现在回到真实的媒体查询：只有系统要求减少动态时才静态。 */
+  var REDUCED = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
   var grid      = $('#grid');
   var seriesNav = $('#series');
   var topbar    = $('#topbar');
   var focusEl   = $('#focus');
+  var galleryBackdrop = $('#galleryBackdrop');
   var focusArt  = $('#focusArt');
+  var focusStage = $('.focus-stage');       /* 衬托背景：参考图模板整幅（第 14 节挂在这里） */
   var unveil    = $('#unveil');
   var unveilTimeline = null;
   var galleryTimeline = null;
@@ -914,6 +1784,209 @@ body{
     }
   };
 
+  /* 聚焦进入的四拍时长（Day 10）。集中在这里，是为了调节奏只改一处，
+     不在时间轴里散落数字（DESIGN_V5 §8.2）。 */
+  var FOCUS_MOTION = {
+    veil:  .20,   /* ① 遮罩压暗：展墙被推远，但作品还没动 */
+    fly:   .68,   /* ② 作品从展墙原位飞到校样台正中 */
+    stage: .46,   /* ③ 衬托背景刷上，把作品装裱起来 */
+    text:  .62    /* ④ 文字先乱码，再逐字归位 */
+  };
+
+  /* GSAP 兜底：本地核心库缺失时再取 CDN。取不到就维持静态终态，不让页面报错。 */
+  function ensureGsap(){
+    if (window.gsap) return;
+    var script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js';
+    script.onload  = function(){ window.dispatchEvent(new Event('gsap:ready')); };
+    script.onerror = function(){ window.dispatchEvent(new Event('gsap:failed')); };
+    document.head.appendChild(script);
+  }
+
+  /* ------------------------------------------------------------------------
+     文字错乱显现（Day 10）
+     ------------------------------------------------------------------------
+     · 先给一屏乱码，再让字符逐字归位：左→右为主序，掺入按字符序号固定的抖动，
+       所以同一段文字每次的归位节奏都有稳定的「不规则」—— 像印版校准时一个一个对上
+     · 终态文本始终先写进 DOM：保证复制、检索、读屏拿到的永远是正确文字，
+       乱码只存在于渲染的那一瞬间
+     · 拉丁字符用字母数字乱码，中日韩字符用块状噪声 —— 中文换成假汉字会脏，
+       块状噪声同样传达「还没对上」，但不制造错误的语义
+     ---------------------------------------------------------------------- */
+  var SCRAMBLE_LATIN  = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#$%&@*<>/\\|=+-';
+  var SCRAMBLE_BLOCKS = '░▒▓█▚▞◤◥◣◢╳╱╲┼';
+  var scrambleJobs = [];
+
+  function scrambleText(el, text, opts){
+    if (!el) return;
+    opts = opts || {};
+    el.textContent = text;                       /* 终态先落 DOM */
+    if (REDUCED) return;                         /* 低动态：直接显示正确文字 */
+
+    var chars = text.split('');
+    var total = chars.length;
+    if (!total) return;
+
+    var duration = opts.duration || FOCUS_MOTION.text * 1000;
+    var delay    = opts.delay || 0;
+    var locks    = [];
+    for (var i = 0; i < total; i++){
+      /* 用字符序号算出的稳定伪随机：同一段文字每次抖动形状一致，不会闪 */
+      var noise = Math.abs(Math.sin((i + 1) * 12.9898) * 43758.5453 % 1);
+      locks.push(delay + duration * Math.min(1, (i / Math.max(1, total - 1)) * .78 + noise * .22));
+    }
+
+    var start = performance.now();
+    var end   = delay + duration + 120;          /* 多留 120ms 收尾，最后几个字才定住 */
+    var job   = { raf:0 };
+
+    function frame(now){
+      var t   = now - start;
+      var out = '';
+      for (var i = 0; i < total; i++){
+        var ch = chars[i];
+        if (ch === ' ' || t >= locks[i]){ out += ch; continue; }
+        var pool = ch.charCodeAt(0) > 0x2E80 ? SCRAMBLE_BLOCKS : SCRAMBLE_LATIN;
+        out += pool.charAt((Math.random() * pool.length) | 0);
+      }
+      el.textContent = out;
+      if (t < end){ job.raf = requestAnimationFrame(frame); return; }
+      el.textContent = text;
+      job.raf = 0;
+    }
+    job.raf = requestAnimationFrame(frame);
+    scrambleJobs.push(job);
+  }
+
+  function cancelAllScrambles(){
+    scrambleJobs.forEach(function(job){ if (job.raf) cancelAnimationFrame(job.raf); });
+    scrambleJobs.length = 0;
+  }
+
+  /* 背景环境动效：低频飞行、路径重连、短暂错色脉冲。它们只改环境层，
+     作品层保持稳定；减少动态时完全不启动。 */
+  function startAmbientBackground(){
+    if (REDUCED) return;
+    var tech = $('.wall-tech');
+    var canvas = $('#ambientCanvas');
+    if (!tech || !canvas) return;
+    var ctx = canvas.getContext('2d');
+    var doveFrames = ['配图-实战-塔罗牌-月亮.png','配图-实战-塔罗牌-星星.png','配图-实战-塔罗牌-太阳.png'].map(function(name){
+      var image = new Image(); return image;
+    });
+    var frameCanvases = [];
+    var width = 0;
+    var height = 0;
+    var doves = { x:-.38, y:.12, speed:.00011, ghosts:[] };
+    var routes = [
+      [[.02,.19],[.18,.2],[.3,.37],[.46,.27],[.58,.08],[.76,.25],[.98,.23]],
+      [[.01,.68],[.2,.68],[.34,.5],[.51,.72],[.68,.55],[.83,.7],[1,.62]],
+      [[.08,.31],[.27,.18],[.44,.34],[.62,.18],[.8,.36],[.98,.2]]
+    ];
+    var routeIndex = 0;
+    var routeBlend = 0;
+    var routeProgress = 0;
+    var last = 0;
+    function resize(){
+      var rect = canvas.getBoundingClientRect();
+      var ratio = Math.min(window.devicePixelRatio || 1, 2);
+      width = rect.width; height = rect.height;
+      canvas.width = Math.max(1, Math.round(width * ratio));
+      canvas.height = Math.max(1, Math.round(height * ratio));
+      ctx.setTransform(ratio,0,0,ratio,0,0);
+    }
+    function drawRoute(points, alpha, color, dash){
+      ctx.save(); ctx.globalAlpha = alpha; ctx.strokeStyle = color; ctx.lineWidth = 1;
+      ctx.setLineDash(dash || []); ctx.beginPath();
+      points.forEach(function(point,index){
+        var x = point[0] * width, y = point[1] * height;
+        if(index===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.stroke();
+      points.forEach(function(point,index){
+        if(index===0 || index===points.length-1 || index%2===0){
+          var x = point[0]*width, y = point[1]*height;
+          ctx.fillStyle = index%3===0 ? '#D92C55' : '#175DE1';
+          ctx.fillRect(x-2,y-2,4,4);
+          ctx.strokeStyle = color; ctx.strokeRect(x-7,y-7,14,14);
+        }
+      });
+      ctx.restore();
+    }
+    function prepareDove(image){
+      if (!image.naturalWidth) return;
+      var frame = document.createElement('canvas');
+      frame.width = image.naturalWidth; frame.height = image.naturalHeight;
+      var frameCtx = frame.getContext('2d'); frameCtx.drawImage(image,0,0);
+      var pixels = frameCtx.getImageData(0,0,frame.width,frame.height);
+      for(var i=0;i<pixels.data.length;i+=4){
+        var brightness = (pixels.data[i]+pixels.data[i+1]+pixels.data[i+2])/3;
+        pixels.data[i+3] = brightness < 26 ? 0 : Math.min(255, Math.max(0, (brightness-26)*2.8));
+      }
+      frameCtx.putImageData(pixels,0,0); frameCanvases.push(frame);
+    }
+    doveFrames.forEach(function(image,index){ image.onload=function(){ prepareDove(image); }; image.src = 'images/arcana/' + ['配图-实战-塔罗牌-月亮.png','配图-实战-塔罗牌-星星.png','配图-实战-塔罗牌-太阳.png'][index]; });
+    function drawDove(now){
+      if (!frameCanvases.length) return;
+      doves.x += doves.speed * (now - last || 16);
+      if (doves.x > 1.18){ doves.x = -.38; doves.ghosts = []; }
+      var frame = frameCanvases[Math.floor(now / 160) % frameCanvases.length];
+      var imageWidth = Math.min(width * .28, 410);
+      var imageHeight = imageWidth * (frame.height / frame.width);
+      if (Math.floor(now / 220) % 4 === 0 && doves.ghosts.length < 5){
+        doves.ghosts.push({x:doves.x,y:doves.y,life:1,frame:frame});
+      }
+      doves.ghosts = doves.ghosts.map(function(ghost){ ghost.life -= .018; return ghost; }).filter(function(ghost){ return ghost.life>0; });
+      doves.ghosts.forEach(function(ghost,index){
+        ctx.save(); ctx.globalAlpha = ghost.life * .18; ctx.globalCompositeOperation='screen';
+        ctx.filter = index%2 ? 'drop-shadow(4px 0 #D92C55)' : 'drop-shadow(-4px 0 #175DE1)';
+        ctx.drawImage(ghost.frame, ghost.x*width + index*10, ghost.y*height + index*4, imageWidth, imageHeight);
+        ctx.restore();
+      });
+      ctx.save(); ctx.globalAlpha=.7; ctx.globalCompositeOperation='screen';
+      ctx.filter='drop-shadow(3px 0 #D92C55) drop-shadow(-3px 0 #175DE1)';
+      ctx.drawImage(frame,doves.x*width,doves.y*height,imageWidth,imageHeight); ctx.restore();
+    }
+    function drawMovingNode(points){
+      routeProgress = (routeProgress + .00075) % 1;
+      var segment = Math.min(points.length - 2, Math.floor(routeProgress * (points.length - 1)));
+      var local = (routeProgress * (points.length - 1)) - segment;
+      var x = (points[segment][0] + (points[segment+1][0]-points[segment][0])*local) * width;
+      var y = (points[segment][1] + (points[segment+1][1]-points[segment][1])*local) * height;
+      ctx.save(); ctx.fillStyle='#175DE1'; ctx.shadowColor='#175DE1'; ctx.shadowBlur=12; ctx.fillRect(x-3,y-3,6,6); ctx.restore();
+    }
+    function drawGlitchStrips(now){
+      if (Math.floor(now / 520) % 9 !== 0) return;
+      ctx.save(); ctx.globalAlpha=.7;
+      for(var i=0;i<4;i++){
+        var y=(.18 + ((i*37)%70)/100) * height;
+        ctx.fillStyle=i%2?'#D92C55':'#175DE1'; ctx.fillRect((now*.08+i*73)%width,y,28+i*19,2);
+      }
+      ctx.restore();
+    }
+    function paint(now){
+      if (!width) resize();
+      ctx.clearRect(0,0,width,height);
+      var current = routes[routeIndex];
+      drawRoute(current,.38,'rgba(22,34,51,.72)');
+      drawRoute(routes[(routeIndex+1)%routes.length],.18,'rgba(23,93,225,.7)',[3,7]);
+      drawRoute(routes[(routeIndex+2)%routes.length],.15,'rgba(217,44,85,.72)',[1,11]);
+      drawMovingNode(current);
+      drawGlitchStrips(now);
+      drawDove(now);
+      if(now-last>5600){ routeIndex=(routeIndex+1)%routes.length; last=now; }
+      window.requestAnimationFrame(paint);
+    }
+    window.addEventListener('resize',resize,{passive:true});
+    resize(); window.requestAnimationFrame(function(now){ last=now; paint(now); });
+    function glitch(){
+      tech.classList.add('glitch-burst');
+      window.setTimeout(function(){ tech.classList.remove('glitch-burst'); }, 190);
+      window.setTimeout(glitch, 6400);
+    }
+    glitch();
+  }
+
   /* 默认落在第一个【有作品】的主题上，免得一进来是一片空装裱 */
   var firstWithWorks = SERIES.filter(function(s){ return s.works.length; })[0] || SERIES[0];
   var state = { series:firstWithWorks, focusIndex:0, open:false };
@@ -929,6 +2002,7 @@ body{
     $('#exhibitionKicker').textContent = 'SERIES ' + pad(index).slice(-2) + ' / ' + pad(SERIES.length).slice(-2);
     $('#exhibitionTitle').textContent = series.name;
     $('#exhibitionIndex').textContent = 'EDITION ' + pad(index).slice(-2) + ' · 2026';
+    document.body.dataset.theme = series.id;
   }
 
   function buildNav(){
@@ -1078,18 +2152,24 @@ body{
     if (!next || next.id === state.series.id || shifting) return;
 
     shifting = true;
+    document.body.dataset.theme = next.id;
     $$('.plate').forEach(function(c){ c.classList.add('leaving'); });
 
     window.setTimeout(function(){
       state.series = next;
       state.focusIndex = 0;
       updateExhibitionHead(next);
-      document.body.dataset.theme = next.id;
       history.replaceState(null, '', '#' + next.id);
       try { localStorage.setItem('art-exhibition-theme', next.id); } catch(e){}
       $$('#series button').forEach(function(b){
         b.setAttribute('aria-selected', String(b.dataset.id === next.id));
       });
+      if (galleryBackdrop){
+        galleryBackdrop.classList.remove('is-changing');
+        void galleryBackdrop.offsetWidth;
+        galleryBackdrop.classList.add('is-changing');
+        window.setTimeout(function(){ galleryBackdrop.classList.remove('is-changing'); }, 1100);
+      }
       renderFloor(true);
     }, REDUCED ? 0 : 260);
 
@@ -1118,6 +2198,41 @@ body{
     if (!rect.width || !rect.height) return null;
     return { left:rect.left, top:rect.top, width:rect.width, height:rect.height };
   }
+  /* 飞行【起点】：展墙上那张作品图片本身。
+     第 14 节下 .win 就是整张图（width:100% + height:auto），所以它的矩形
+     已经是图片的真实比例，不需要再按 object-fit 换算。 */
+  function cardRect(index){
+    var card = $$('.plate')[index];
+    var win  = card && card.querySelector('.win');
+    if (!win) return matRect(index);            /* 退化：拿不到画心窗才用整张卡 */
+    var rect = win.getBoundingClientRect();
+    if (!rect.width || !rect.height) return null;
+    return { left:rect.left, top:rect.top, width:rect.width, height:rect.height };
+  }
+  /* 起飞时只藏那张图、不藏整张卡：卡纸留在墙上，作品自己离开。 */
+  function sourceWin(index){
+    var card = $$('.plate')[index];
+    return card ? card.querySelector('.win') : null;
+  }
+  /* 展墙上那张图的原始像素尺寸 —— 用来算它在槽位里的落点。 */
+  function naturalSize(index){
+    var card = $$('.plate')[index];
+    var img  = card && card.querySelector('.win img');
+    if (!img || !img.naturalWidth || !img.naturalHeight) return { w:0, h:0 };
+    return { w:img.naturalWidth, h:img.naturalHeight };
+  }
+  /* 飞行【终点】：图片落进校样台槽位后的真实矩形。
+     槽位里是 object-fit:contain，图片会按原比例居中并留边 ——
+     若直接拿槽位矩形当终点，飞行末段会被「撑满」一次，出现一次轻微形变。
+     换算成居中矩形后，起点与终点同为图片比例，全程纯等比缩放。 */
+  function slotRect(natW, natH){
+    var box = focusArt.getBoundingClientRect();
+    if (!box.width || !box.height) return null;
+    if (!natW || !natH) return { left:box.left, top:box.top, width:box.width, height:box.height };
+    var s = Math.min(box.width / natW, box.height / natH);
+    var w = natW * s, h = natH * s;
+    return { left:box.left + (box.width - w) / 2, top:box.top + (box.height - h) / 2, width:w, height:h };
+  }
   function rectOnScreen(rect){
     return !!rect && rect.left + rect.width > 0 && rect.left < window.innerWidth &&
       rect.top + rect.height > 0 && rect.top < window.innerHeight;
@@ -1131,7 +2246,9 @@ body{
     image.alt = '';
     flight.appendChild(image);
     document.body.appendChild(flight);
-    flight.style.padding = (from.width * .008) + 'px';
+    /* padding 一律为 0：校样台的画心槽是 padding:0，
+       飞行层留一点内边距就会在交接那帧露出一条缝。 */
+    flight.style.padding = '0';
     window.gsap.set(flight, {
       left:to.left, top:to.top, width:to.width, height:to.height,
       transformOrigin:'0 0',
@@ -1140,6 +2257,8 @@ body{
     });
     return flight;
   }
+  /* 复位：把所有被时间轴改过的内联样式交还回去。
+     少了这一步，第二次打开聚焦会带着上一次的 opacity/visibility 残留。 */
   function clearFocusMotion(){
     if (focusMotion){ focusMotion.kill(); focusMotion = null; }
     $$('.focus-flight').forEach(function(flight){ flight.remove(); });
@@ -1147,6 +2266,38 @@ body{
     focusEl.style.opacity = '';
     focusArt.style.opacity = '';
     focusArt.querySelectorAll('.layer').forEach(function(layer){ layer.style.visibility = ''; });
+    if (window.gsap){
+      window.gsap.set(
+        [focusEl, focusArt, focusStage].concat($$('.focus-info, .close-btn, .nav-btn, .plate .win')),
+        { clearProps:'opacity,visibility,transform' }
+      );
+    }
+  }
+
+  /* 校样台的「装裱配件」：关闭按钮、左右箭头。
+     说明栏 .focus-info 在 .focus-stage 内部，随衬托背景一起进场，不必单列。 */
+  function focusChrome(){ return $$('.close-btn, .nav-btn'); }
+
+  /* 聚焦面板的文字。animate=true 走错乱显现；否则直接给终态。 */
+  function setFocusText(i, animate){
+    var works = state.series.works;
+     var w = works[i];
+    if (!w) return;
+    cancelAllScrambles();
+    if (!animate){
+      $('#focusName').textContent        = w.name;
+      $('#focusSeries').textContent      = state.series.name;
+      $('#focusCount').textContent       = 'No. ' + pad(i + 1) + ' / ' + pad(works.length);
+      $('#focusVerse').textContent       = w.verse || '';
+      $('#focusDescription').textContent = w.note || '';
+      return;
+    }
+    /* 四行错峰起跑：标题先到，说明最后落定 */
+    scrambleText($('#focusName'),        w.name,                                          { delay:0,   duration:FOCUS_MOTION.text * 1000 });
+    scrambleText($('#focusSeries'),      state.series.name,                               { delay:70,  duration:420 });
+    scrambleText($('#focusCount'),       'No. ' + pad(i + 1) + ' / ' + pad(works.length), { delay:130, duration:400 });
+    scrambleText($('#focusVerse'),       w.verse || '',                                   { delay:170, duration:620 });
+    scrambleText($('#focusDescription'), w.note || '',                                     { delay:190, duration:760 });
   }
 
   function paintFocus(i, keepPrevious){
@@ -1162,9 +2313,7 @@ body{
     focusArt.appendChild(layer);
     if (!keepPrevious) olds.forEach(function(old){ old.remove(); });
 
-    $('#focusName').textContent   = w.name;
-    $('#focusSeries').textContent = state.series.name;
-    $('#focusCount').textContent  = 'No. ' + pad(i + 1) + ' / ' + pad(works.length);
+    setFocusText(i, false);          /* 先落终态，错乱显现由时间轴另行触发 */
     return layer;
   }
 
@@ -1172,66 +2321,135 @@ body{
   var savedScroll = 0;
   function restoreScroll(){ window.scrollTo(0, savedScroll); }
 
+  /* ========================================================================
+     聚焦进入 · 四拍（Day 10）
+     ------------------------------------------------------------------------
+     ① 遮罩压暗  展墙被推远，但作品还没动
+     ② 作品飞行  从展墙的画心窗，飞到校样台中央的画心槽（同为 2:3，纯等比缩放）
+     ③ 衬托装裱  参考图模板刷上来，把已经落位的作品「装裱」起来
+     ④ 文字归位  先一屏乱码，再逐字归位
+
+     顺序不能反：先让作品被看见，再给它一个环境，最后才解释它是什么。
+     反过来看——模板先出现就等于先给一个空相框，作品再掉进去，观感是「填表」。
+     ====================================================================== */
   function openFocus(i){
     if (!state.series.works[i]) return;
     state.open = true;
     state.focusIndex = i;
+    cancelAllScrambles();
 
-    /* ★ FLIP：先量出网格里那张卡的屏幕矩形，再让聚焦大图从那个矩形「长出来」。
-       这就是 AC-34 要求的「从网格原位放大移入」，而不是黑底弹图。 */
-    var origin = matRect(i);
-    var sourceCard = $$('.plate')[i];
+    var gsap   = window.gsap;
+    var origin = cardRect(i);                 /* 展墙上那张作品图 */
+    var source = sourceWin(i);                /* 起飞时只藏那张图 */
+    var nat    = naturalSize(i);
 
     focusEl.classList.add('open');
+    focusEl.dataset.mode = state.series.id === 'theology' ? 'theology' : 'direct';
     document.body.style.overflow = 'hidden';
-    focusArt.innerHTML = '';
-    paintFocus(i);
+    /* 只清画心层。衬托背景挂在 .focus-stage 上，是常驻节点，不能被抹掉 */
+    $$('#focusArt .layer').forEach(function(old){ old.remove(); });
+    var layer = paintFocus(i);
     savedScroll = window.scrollY;
-    if (!REDUCED && window.gsap && origin && rectOnScreen(origin)){
-      var destination = focusArt.getBoundingClientRect();
-      var flight = createFocusFlight(state.series.works[i], origin, destination);
-      if (sourceCard) window.gsap.set(sourceCard, { autoAlpha:0 });
-      focusArt.classList.add('is-moving');
-      focusMotion = window.gsap.timeline({
-        defaults:{ ease:EASE.press, overwrite:'auto' },
-        onComplete:function(){
-          flight.remove();
-          if (sourceCard) window.gsap.set(sourceCard, { clearProps:'opacity,visibility' });
-          focusArt.classList.remove('is-moving');
-          focusMotion = null;
-        }
-      }).to(flight, {
-        x:0, y:0, scaleX:1, scaleY:1, padding:(destination.width * .008) + 'px', duration:.84
-      }, 0).fromTo(flight, { autoAlpha:.82 }, {
-        autoAlpha:1, duration:.62, ease:EASE.reveal
-      }, 0);
-    }
-  }
 
-  function closeFocus(){
-    if (focusMotion) return;
-    var destination = matRect(state.focusIndex);
-    var focusRect = focusArt.getBoundingClientRect();
-    var sourceCard = $$('.plate')[state.focusIndex];
-    var work = state.series.works[state.focusIndex];
-    if (!REDUCED && window.gsap && destination && rectOnScreen(destination) && work){
-      var flight = createFocusFlight(work, focusRect, destination);
-      focusArt.classList.add('is-moving');
-      if (sourceCard) window.gsap.set(sourceCard, { autoAlpha:0 });
-      focusMotion = window.gsap.timeline({
-        defaults:{ ease:EASE.lift, overwrite:'auto' },
-        onComplete:function(){
-          flight.remove();
-          if (sourceCard) window.gsap.set(sourceCard, { clearProps:'opacity,visibility' });
-          finishCloseFocus();
-        }
-      }).to(flight, {
-        x:0, y:0, scaleX:1, scaleY:1, padding:(destination.width * .008) + 'px', autoAlpha:.28, duration:.72
-      }, 0).to(focusEl, { autoAlpha:0, duration:.48 }, .12);
+    var destination = slotRect(nat.w, nat.h);
+    var animate = !REDUCED && gsap && focusStage && origin && destination && rectOnScreen(origin);
+
+    if (!animate){
+      /* 没有 GSAP 或系统要求低动态时，也要隐藏原卡片，避免它留在聚焦层后方造成重影。 */
+      if (source) source.style.opacity = '0';
+      setFocusText(i, false);                 /* 无动画：直接给终态，不做乱码 */
       return;
     }
-    if (!REDUCED && window.gsap){
-      focusMotion = window.gsap.timeline({
+
+    /* 交给 GSAP 之后，.focus 上那套 CSS transition 必须停掉，
+       否则每一帧的内联 opacity 都会被 CSS 再过渡一次，动画会拖尾。 */
+    focusEl.classList.add('motion');
+
+    /* 起始态：遮罩、衬托背景、画心、配件全部先隐身，交给时间轴逐拍放出 */
+    /* 聚焦层和展示背景保持可见；最终画框先隐藏，避免与飞行层重影。 */
+    gsap.set(focusEl,      { autoAlpha:1 });
+    gsap.set(focusStage,   { autoAlpha:1, scale:1.05 });
+    gsap.set(layer,        { autoAlpha:0, display:'none' });
+    gsap.set(focusChrome(), { autoAlpha:1 });
+
+    var flight = createFocusFlight(state.series.works[i], origin, destination);
+    focusArt.classList.add('is-moving');
+    if (source) gsap.set(source, { autoAlpha:0 });
+
+    var tFly   = FOCUS_MOTION.veil * .4;              /* 遮罩压到一半就起飞 */
+    var tStage = tFly + FOCUS_MOTION.fly;             /* 落位 → 装裱 + 文字 */
+
+    focusMotion = gsap.timeline({
+      defaults:{ overwrite:'auto' },
+      onComplete:function(){
+        flight.remove();
+        focusArt.classList.remove('is-moving');
+        if (source) gsap.set(source, { clearProps:'opacity,visibility' });
+        gsap.set(layer, { clearProps:'opacity,visibility' });
+        focusMotion = null;
+      }
+    })
+      /* ① 墙退半步：展墙被推远，作品还没动 */
+      .to(focusEl, { autoAlpha:1, duration:FOCUS_MOTION.veil, ease:EASE.reveal }, 0)
+
+      /* ② 作品从展墙原位飞到校样台正中。两端同为图片比例 → 纯等比缩放 */
+      .to(flight, {
+        x:0, y:0, scaleX:1, scaleY:1,
+        duration:FOCUS_MOTION.fly, ease:EASE.press
+      }, tFly)
+      /* 飞行层不再从半透明起步，图片亮度保持稳定。 */
+
+      /* ③ 衬托背景刷上，把已经落位的作品装裱起来 */
+      .to(focusStage, { autoAlpha:1, scale:1, duration:FOCUS_MOTION.stage, ease:EASE.reveal }, tStage)
+      .to(focusChrome(), { autoAlpha:1, duration:FOCUS_MOTION.stage * .8, ease:EASE.reveal }, tStage + .1)
+
+      /* ④ 交接：飞行层让位给真正的画心层；文字同步以乱码起手，再逐字归位 */
+      .call(function(){
+        focusArt.classList.remove('is-moving');
+        gsap.set(layer, { autoAlpha:1, display:'block' });
+        setFocusText(i, true);
+      }, null, tStage);
+  }
+
+  /* 关闭 = 进入的逆序：装裱先退（作品重新成为主角），作品飞回墙上，遮罩最后收。
+     原来的写法只让遮罩淡出，作品原地消失 —— 那是「关掉一个弹窗」，不是「把画送回墙上」。 */
+  function closeFocus(){
+    /* 进入动画还没播完就按了关闭：先接管并清场，再走退出。
+       旧逻辑是直接 return，结果 ESC 在开场那一秒是全失灵的。 */
+    if (focusMotion) clearFocusMotion();
+    cancelAllScrambles();
+
+    var gsap        = window.gsap;
+    var nat         = naturalSize(state.focusIndex);
+    var origin      = slotRect(nat.w, nat.h);         /* 校样台上图片的真实矩形 */
+    var destination = cardRect(state.focusIndex);     /* 展墙上原来那张图 */
+    var source      = sourceWin(state.focusIndex);
+    var work        = state.series.works[state.focusIndex];
+
+    if (!REDUCED && gsap && origin && destination && rectOnScreen(destination) && work){
+      var flight = createFocusFlight(work, origin, destination);
+      focusArt.classList.add('is-moving');            /* 静态画心让位给飞行层 */
+      if (source) gsap.set(source, { autoAlpha:0 });
+      var chrome = focusChrome();
+      focusMotion = gsap.timeline({
+        defaults:{ overwrite:'auto' },
+        onComplete:function(){
+          flight.remove();
+          if (source) gsap.set(source, { clearProps:'opacity,visibility' });
+          finishCloseFocus();
+        }
+      })
+        /* ① 衬托背景与配件先退，作品重新变成画面主角 */
+        .to([focusStage].concat(chrome), { autoAlpha:0, duration:.24, ease:EASE.reveal }, 0)
+        /* ② 作品飞回展墙原位 */
+        .to(flight, { x:0, y:0, scaleX:1, scaleY:1, duration:.64, ease:EASE.lift }, .06)
+        /* 飞行层保持原亮度，完成后直接移除。 */
+        /* ③ 遮罩最后收 */
+        .to(focusEl, { autoAlpha:0, duration:.32, ease:EASE.reveal }, .48);
+      return;
+    }
+    if (!REDUCED && gsap){
+      focusMotion = gsap.timeline({
         defaults:{ overwrite:'auto' },
         onComplete:function(){ focusMotion = null; finishCloseFocus(); }
       }).to(focusArt, { scale:.96, autoAlpha:0, duration:.3, ease:EASE.lift }, 0)
@@ -1244,8 +2462,12 @@ body{
   function finishCloseFocus(){
     state.open = false;
     focusEl.classList.remove('open');
+    delete focusEl.dataset.mode;
     document.body.style.overflow = '';
     clearFocusMotion();
+    /* 关闭后不保留聚焦副本，下一次打开由当前作品重新生成。 */
+    $$('#focusArt .layer').forEach(function(layer){ layer.remove(); });
+    $$('.plate .win').forEach(function(win){ win.style.opacity = ''; win.style.visibility = ''; });
     focusArt.style.transform = '';
     focusArt.style.transformOrigin = '';
     restoreScroll();
@@ -1259,14 +2481,20 @@ body{
     var nextIndex = (oldIndex + d + n) % n;
     var oldWork = state.series.works[oldIndex];
     var nextWork = state.series.works[nextIndex];
-    var focusRect = focusArt.getBoundingClientRect();
-    var oldOrigin = matRect(oldIndex);
-    var nextOrigin = matRect(nextIndex);
+    /* 换印时两端各有自己的落点：旧作从它在槽位里的矩形飞回展墙，
+       新作从展墙飞到自己的落点。两件作品比例不同时，各算各的才不会形变。 */
+      var oldNat     = naturalSize(oldIndex);
+    var nextNat    = naturalSize(nextIndex);
+    var oldSlot    = slotRect(oldNat.w, oldNat.h);
+    var nextSlot   = slotRect(nextNat.w, nextNat.h);
+    var oldOrigin  = cardRect(oldIndex);
+    var nextOrigin = cardRect(nextIndex);
     var canFly = !REDUCED && window.gsap && window.innerWidth > 760 &&
       rectOnScreen(oldOrigin) && rectOnScreen(nextOrigin);
 
     state.focusIndex = nextIndex;
     var newLayer = paintFocus(nextIndex, true);
+    setFocusText(nextIndex, true);               /* 换印时文字同样走一遍错乱归位 */
     var oldLayers = Array.prototype.slice.call(focusArt.querySelectorAll('.layer'))
       .filter(function(layer){ return layer !== newLayer; });
 
@@ -1276,10 +2504,10 @@ body{
     }
 
     if (canFly){
-      var outgoing = createFocusFlight(oldWork, focusRect, oldOrigin);
-      var incoming = createFocusFlight(nextWork, nextOrigin, focusRect);
-      var oldCard = $$('.plate')[oldIndex];
-      var nextCard = $$('.plate')[nextIndex];
+      var outgoing = createFocusFlight(oldWork, oldSlot, oldOrigin);
+      var incoming = createFocusFlight(nextWork, nextOrigin, nextSlot);
+      var oldCard = sourceWin(oldIndex);
+      var nextCard = sourceWin(nextIndex);
       if (oldCard) window.gsap.set(oldCard, { autoAlpha:0 });
       if (nextCard) window.gsap.set(nextCard, { autoAlpha:0 });
       focusArt.classList.add('is-moving');
@@ -1296,8 +2524,8 @@ body{
         }
       });
       focusMotion
-        .to(outgoing, { x:0, y:0, scaleX:1, scaleY:1, padding:(oldOrigin.width * .008) + 'px', autoAlpha:.18, duration:.72, ease:EASE.lift }, 0)
-        .to(incoming, { x:0, y:0, scaleX:1, scaleY:1, padding:(focusRect.width * .008) + 'px', autoAlpha:1, duration:.82, ease:EASE.press }, .04);
+        .to(outgoing, { x:0, y:0, scaleX:1, scaleY:1, duration:.72, ease:EASE.lift }, 0)
+        .to(incoming, { x:0, y:0, scaleX:1, scaleY:1, duration:.82, ease:EASE.press }, .04);
       return;
     }
 
@@ -1317,11 +2545,11 @@ body{
       .fromTo(oldLayers, {
         x:0, autoAlpha:1, clipPath:'inset(0 0 0 0)'
       }, {
-        x:-sign * 46, autoAlpha:0, clipPath:sign > 0 ? 'inset(0 100% 0 0)' : 'inset(0 0 0 100%)',
+        x:-sign * 46, autoAlpha:1, clipPath:sign > 0 ? 'inset(0 100% 0 0)' : 'inset(0 0 0 100%)',
         duration:.38, ease:EASE.lift
       }, 0)
       .fromTo(newLayer, {
-        x:sign * 46, autoAlpha:0, clipPath:sign > 0 ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)'
+        x:sign * 46, autoAlpha:1, clipPath:sign > 0 ? 'inset(0 0 0 100%)' : 'inset(0 100% 0 0)'
       }, {
         x:0, autoAlpha:1, clipPath:'inset(0 0 0 0)',
         duration:.62, ease:EASE.press
@@ -1515,19 +2743,15 @@ body{
   ['click','keydown','wheel','touchstart'].forEach(function(ev){
     window.addEventListener(ev, skipUnveil, { once:true, passive:true });
   });
-  waitForGsap(5000).then(function(loaded){
-    if (galleryRevealed) return;
-    if (loaded) playUnveil();
-    else {
-      unveil.style.display = 'none';
-      finishGalleryEntrance();
-    }
-  });
+  /* 静态模式不等待 GSAP、不启动背景 canvas，也不播放揭幕或入场时间轴。 */
+  unveil.style.display = 'none';
+  finishGalleryEntrance();
 
   /* ========================================================================
      初始化：锚点 / 记忆主题优先（AC-12 / AC-13）
      ====================================================================== */
   function boot(){
+    ensureGsap();                     /* 本地库缺失时补一次 CDN，失败不影响静态浏览 */
     var hash  = (location.hash || '').replace('#','');
     var saved = null;
     try { saved = localStorage.getItem('art-exhibition-theme'); } catch(e){}

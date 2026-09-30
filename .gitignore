@@ -25,3 +25,8 @@ _ref/
 *.key
 *.pem
 credentials.json
+
+# 本地测试临时产物（浏览器 profile / QA 截图）—— 不进仓库
+qa-*
+chrome-*
+edge-*
