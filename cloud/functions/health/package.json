@@ -1,0 +1,7 @@
+{
+  "name": "health",
+  "version": "1.0.0",
+  "description": "链路探针：GET /api/health 返回 {ok:true, service:'art-exhibition'}",
+  "main": "index.js",
+  "private": true
+}

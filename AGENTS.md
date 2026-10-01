@@ -104,7 +104,8 @@
 
 ### A · 文件存放习惯
 
-- 根目录只放 **5 份文字档案**（`AGENTS.md` / `PRD.md` / `research.md` / `TECH_DESIGN.md` / `DESIGN_V5.md`）与站点入口 `index.html`。
+- 根目录只放 **6 份文字档案**（`AGENTS.md` / `PRD.md` / `research.md` / `TECH_DESIGN.md` / `DESIGN_V5.md` / `api-contract.md`）与站点入口 `index.html`。
+  - `api-contract.md` 由主人于 Day 15（2026-10-01）拍板升格：它是第 3 周前后端的**唯一仲裁物**，地位与 `PRD.md` 同级，故放主目录而非 `mvp/`。
 - 实验性页面与素材放 `mvp/`；参考文献与取证截图放 `_ref/`（**不进仓库**）。
 - 实验品**定稿后搬出 `mvp/`**，升格为根目录档案（如 `DESIGN_V5.md`）—— 档案是对外的，实验品是给自己看的。
 - 新建文件前先说明它属于哪一类、放哪里，不要顺手丢在根目录。
@@ -129,4 +130,4 @@
 
 ---
 
-_最后更新：2026-09-21（Day 6 · 追加个人规则 A/B/C；第零节脱敏；A 条随 `DESIGN_V5.md` 升格为档案同步更新）_
+_最后更新：2026-10-01（Day 15 · A 条档案数由 5 更新为 6，纳入 `api-contract.md`）_

@@ -1,0 +1,295 @@
+# API 契约 · ART EXHIBITION
+
+> **本文件的地位：第 3 周的唯一仲裁物。**
+> 前端照它调用，后端照它实现。双方**都不去猜对方的代码**；有分歧，以本文件为准。
+> 要改接口，先改这份文档，再改代码 —— 顺序不能反。
+>
+> - **版本**：v1.1（Day 15 登记并定稿，2026-10-01）
+> - **状态**：**已登记、已定稿、未实现**。本日只登记占位，一行业务代码都不写。
+> - **数据来源**：由 `mvp/index.html` 的真实页面结构反推（七个页面动作 → 五个待实现接口）。
+
+---
+
+## 一、通用约定
+
+| 项 | 约定 |
+|---|---|
+| 协议 | HTTPS |
+| 基地址 | `https://art-exhibition-d7ggtul83d566a6c9.service.tcloudbase.com` |
+| 路径前缀 | 一律 `/api/` |
+| 编码 | `content-type: application/json; charset=utf-8` |
+| 时间 | 一律为 **毫秒级 Unix 时间戳**（number），字段名以 `At` 结尾 |
+| 命名 | 请求/响应字段一律 `camelCase` |
+| 匿名 | **不收集**姓名、手机号、邮箱；`visitorId` 仅为前端本地生成的随机串 |
+| 鉴权 | S1 阶段**无鉴权**（公开画廊）；如需后台管理，另行登记 |
+
+---
+
+## 二、数据表（3 张）
+
+> 第 3 周建表以此为准。表名、字段名、类型三处都必须一致。
+
+### 2.1 `works` · 作品主表
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `_id` | string | ✓ | 作品唯一标识（由 `img` 路径派生，稳定不变） |
+| `name` | string | ✓ | 英文标题（展墙上显示的那一行） |
+| `img` | string | ✓ | 站内相对路径，如 `images/arcana/01_愚者_0_THE-FOOL_494x741.png` |
+| `series` | string | ✓ | 所属展厅 id，枚举：`theology` / `arcana` / `anime-worlds` / `other-works` |
+| `material` | string | ✓ | 材质方言（v5 决策：**只做属性字段，不参与导航**），当前全部为 `print` |
+| `note` | string | ✓ | 中文作品解说（**仅聚焦视图可见**，不上展墙） |
+| `verse` | string \| null | | 经句（**仅 `theology` 展厅有**，其余为 `null`） |
+| `order` | number | ✓ | 作者策展位次（**位次永按此字段，热度不参与排序**，见 §6） |
+| `createdAt` | number | ✓ | 入库时间戳 |
+
+### 2.2 `likes` · 点赞记录表
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `_id` | string | ✓ | 记录唯一标识 |
+| `workId` | string | ✓ | 指向 `works._id` |
+| `visitorId` | string | ✓ | 匿名访客标识（前端生成并持久化，用于防重复计数） |
+| `createdAt` | number | ✓ | 点赞时间戳 |
+
+**索引建议**：`workId`（统计用）、`workId + visitorId` 联合唯一（防重复）。
+
+### 2.3 `notes` · 一句话感想表
+
+| 字段 | 类型 | 必填 | 说明 |
+|---|---|---|---|
+| `_id` | string | ✓ | 记录唯一标识 |
+| `workId` | string | ✓ | 指向 `works._id` |
+| `visitorId` | string | ✓ | 匿名访客标识 |
+| `text` | string | ✓ | 感想正文，**长度 ≤ 50 个字符**（中英文同等计 1 字符） |
+| `createdAt` | number | ✓ | 提交时间戳 |
+
+> ⚠️ 注意：`notes.text` 是**观众写的**；`works.note` 是**作者写的作品解说**。两者同名不同物，写代码时不要混。
+
+---
+
+## 三、统一响应形状
+
+### 3.1 成功
+
+```json
+{
+  "ok": true,
+  "data": { }
+}
+```
+
+- `ok` 恒为 `true`
+- 业务数据一律装在 `data` 里；即使只有一个字段也**不要**提到顶层
+
+### 3.2 失败
+
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "INVALID_PARAM",
+    "message": "缺少必填参数 workId"
+  }
+}
+```
+
+- `code`：**机器读**，全大写下划线，取自下表
+- `message`：**人读**，中文，直接说明怎么错、怎么改
+- 失败响应**不返回** `data` 字段
+- HTTP 状态码必须与 `code` 语义一致（下表已绑定）
+
+### 3.3 错误码字典（唯一定义处）
+
+| HTTP | `code` | 何时用 |
+|---|---|---|
+| 400 | `INVALID_PARAM` | 缺必填参数、参数类型不对、枚举值非法 |
+| 404 | `NOT_FOUND` | `workId` 在 `works` 里查不到 |
+| 405 | `METHOD_NOT_ALLOWED` | 方法不支持（`/api/health` 已用此码） |
+| 409 | `CONFLICT` | 同一访客对同一作品重复提交（如感想刷屏） |
+| 413 | `TEXT_TOO_LONG` | `notes.text` 超过 50 字符 |
+| 429 | `RATE_LIMITED` | 同 `visitorId` 短时间请求过于频繁 |
+| 500 | `INTERNAL_ERROR` | 服务端异常（不向外暴露堆栈） |
+
+---
+
+## 四、接口清单（6 个）
+
+### 4.0 `GET /api/health` ✅ **已实现（Day 15）**
+
+链路探针。不连数据库、不写业务。
+
+| 项 | 内容 |
+|---|---|
+| 方法 | `GET` |
+| 路径 | `/api/health` |
+| 请求参数 | 无 |
+| 响应 200 | `{ "ok": true, "service": "art-exhibition" }` |
+| 错误 | 405 `METHOD_NOT_ALLOWED`（非 GET） |
+| 实测地址 | `https://art-exhibition-d7ggtul83d566a6c9.service.tcloudbase.com/api/health` |
+
+> 说明：此接口为**唯一已上线**的接口，其响应形状是 §3 之外的极简形态（不含 `data` 包裹），因为它是部署探针而非业务接口。后续业务接口一律遵循 §3。
+
+---
+
+### 4.1 `GET /api/works` · 读取作品列表
+
+> **清单特意点名的漏项：一定不能忘列表读取接口。** 页面初始渲染的全部数据都来自这里。
+
+| 项 | 内容 |
+|---|---|
+| 方法 | `GET` |
+| 路径 | `/api/works` |
+| Query 参数 | `series`（可选）展厅 id，用于只取一个展厅；缺省 = 全部<br>`limit`（可选）最多返回条数，缺省 = 全部 |
+| 请求体 | 无 |
+| 响应 200 | `{ "ok": true, "data": { "series": [...], "works": [...] } }` |
+
+**`data.series[]` 形状**：
+
+```json
+{ "id": "theology", "name": "THEOLOGY", "count": 29 }
+```
+
+**`data.works[]` 形状**：严格对应 §2.1 `works` 表的全部字段。
+
+```json
+{
+  "_id": "images-arcana-01-the-fool",
+  "name": "THE FOOL",
+  "img": "images/arcana/01_愚者_0_THE-FOOL_494x741.png",
+  "series": "arcana",
+  "material": "print",
+  "note": "轻装上路的人站在悬崖边……",
+  "verse": null,
+  "order": 1,
+  "createdAt": 1790000000000
+}
+```
+
+**排序**：`works` 按 `order` 升序；`series` 按前端导航固定顺序（`theology` → `arcana` → `anime-worlds` → `other-works`）。
+
+**错误**：400 `INVALID_PARAM`（`series` 值不在枚举内）。
+
+---
+
+### 4.2 `POST /api/like` · 匿名点赞
+
+| 项 | 内容 |
+|---|---|
+| 方法 | `POST` |
+| 路径 | `/api/like` |
+| 请求体 | `{ "workId": "string", "visitorId": "string" }` |
+| 响应 200 | `{ "ok": true, "data": { "workId": "...", "likes": 12, "liked": true } }` |
+
+- 行为：**切换式**（toggle，已拍板，见 §7）—— 未赞过则 +1 并返回 `liked:true`；已赞过则 -1 并返回 `liked:false`
+- `likes` 恒为该作品**当前**总数（不返回增量）
+- 实现约束：`visitorId` 由前端生成并持久化；服务端对 `workId + visitorId` 建**联合唯一索引**
+
+**错误**：400 `INVALID_PARAM`（缺 `workId`/`visitorId`）、404 `NOT_FOUND`（`workId` 不存在）、429 `RATE_LIMITED`。
+
+---
+
+### 4.3 `GET /api/stats` · 热度统计
+
+| 项 | 内容 |
+|---|---|
+| 方法 | `GET` |
+| 路径 | `/api/stats` |
+| 请求参数 | 无 |
+| 响应 200 | `{ "ok": true, "data": { "totalLikes": 128, "byWork": { "workId": 9 }, "bySeries": { "arcana": 40 } } }` |
+
+**用途限制（v5 已拍板，不得越界）**：热度**只允许改变「入场先后」**（动画出场节奏），
+**绝不允许改变作品位次**。位次永远由 `works.order` 决定。把「热度」译成「节奏」，不译成「等级」。
+
+**错误**：本接口无入参，故无 400；仅在统计读取失败时返回 500 `INTERNAL_ERROR`。
+
+---
+
+### 4.4 `POST /api/note` · 写一句话感想
+
+| 项 | 内容 |
+|---|---|
+| 方法 | `POST` |
+| 路径 | `/api/note` |
+| 请求体 | `{ "workId": "string", "visitorId": "string", "text": "string" }` |
+| 响应 200 | `{ "ok": true, "data": { "note": { "_id": "...", "workId": "...", "text": "...", "createdAt": 1790000000000 } } }` |
+
+- `text` 上限 **50 字符**；服务端**必须**用 `String.length` 之外的方式按「字符数」校验（emoji 算 1 个）
+- 服务端须 trim 首尾空白；trim 后为空 → 400
+
+**错误**：400 `INVALID_PARAM`、404 `NOT_FOUND`、413 `TEXT_TOO_LONG`、409 `CONFLICT`、429 `RATE_LIMITED`。
+
+---
+
+### 4.5 `GET /api/notes` · 读取感想列表
+
+| 项 | 内容 |
+|---|---|
+| 方法 | `GET` |
+| 路径 | `/api/notes` |
+| Query 参数 | `workId`（**必填**）、`limit`（可选，默认 20，上限 50） |
+| 响应 200 | `{ "ok": true, "data": { "notes": [ ... ], "total": 7 } }` |
+
+**`data.notes[]` 形状**（**不含 `visitorId`** —— 匿名作品不对外暴露访客标识）：
+
+```json
+{ "_id": "...", "workId": "...", "text": "光从黑暗里分开的那一刻……", "createdAt": 1790000000000 }
+```
+
+**排序**：`createdAt` 降序（新的在前）。
+
+**错误**：400 `INVALID_PARAM`（缺 `workId`）。
+
+---
+
+## 五、页面动作 → 接口 映射表
+
+> 左列 = `mvp/index.html` 上**真实存在的每个动作**（已逐行核对源码）；
+> 右列 = 该动作需要后端提供什么。**这是本契约的推导依据，也是验收清单要求的那张表。**
+
+| # | 页面动作 | 现状（Day 15 为止） | 需要的接口 |
+|---|---|---|---|
+| 1 | 打开页面，看到四个展厅 + 整面展墙 | 数据**写死**在 `index.html` 的 `SOURCE_SERIES` 里 | `GET /api/works` |
+| 2 | 点展厅按钮，切到该展厅 | 纯前端过滤 + `localStorage` 记上次看的展厅 | 复用 ①（或带 `?series=`） |
+| 3 | 点一幅画，进聚焦视图看作品解说 | 数据写死（`note` / `verse` 字段） | 复用 ①（响应已含这两个字段） |
+| 4 | 赞 / 收藏这幅画 | **不存在** | `POST /api/like` |
+| 5 | 看这幅画被赞了多少、哪个展厅最热 | **不存在** | `GET /api/stats` |
+| 6 | 给这幅画留一句感想（≤50 字） | **不存在** | `POST /api/note` |
+| 7 | 看别人留的感想 | **不存在** | `GET /api/notes` |
+
+**只有 1–3 是页面现在已经有的动作**（对应接口就是把写死的数据搬到库里）；
+**4–7 是 v5 新增的「作者反馈系统」**，页面 UI 与后端都还没有。
+
+---
+
+## 六、第 3 周实施顺序（本文件登记、按序实现）
+
+| 天 | 做什么 | 对应接口 |
+|---|---|---|
+| Day 16 | 建三张表 + 灌入 92 条作品数据 | （建表，无接口） |
+| Day 17 | 实现列表读取，前端从写死改为 fetch | `GET /api/works` |
+| Day 18 | 实现点赞 | `POST /api/like` |
+| Day 19 | 实现感想读写 + 统计 | `POST /api/note`、`GET /api/notes`、`GET /api/stats` |
+| Day 20 | 配 CORS、前端接 SDK、全链路联调 | 全部 |
+
+**约束**：跨域（CORS）**今天与 Day 16–19 都不配**，Day 20 统一处理。
+
+---
+
+## 七、已拍板决定（Day 15，2026-10-01）
+
+> 原「待主人拍板项」两条，主人已当场裁定。**此两条为定稿，第 3 周不得再改**（要改须先改本文件）。
+
+1. **点赞为「切换式」（toggle）** —— 已定。
+   可取消，情绪更自由；实现上必须建 `workId + visitorId` 联合唯一索引，保证同一访客对同一作品**至多一条**记录。
+2. **`api-contract.md` 放主目录** —— 已定。
+   与 `PRD.md` 同级，作为第 3 周唯一仲裁物；`AGENTS.md` 个人规则 A 的档案数已同步由 5 更改为 6。
+
+---
+
+## 八、变更记录
+
+| 日期 | 版本 | 变更 | 变更人 |
+|---|---|---|---|
+| 2026-10-01 | v1.0 | 首次登记：3 表 + 6 接口 + 统一错误形状（Day 15，仅登记不实现） | AI 起草 |
+| 2026-10-01 | **v1.1** | 主人逐行核对通过；两条待决项裁定（点赞=切换式、文档置主目录），§7 由「待拍板」转为「已拍板」 | AI 起草，主人裁定 |
