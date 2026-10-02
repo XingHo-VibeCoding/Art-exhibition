@@ -30,3 +30,6 @@ credentials.json
 qa-*
 chrome-*
 edge-*
+
+# WorkBuddy 工作台生成的元数据文件（非项目内容）—— 不进仓库
+.wbapp_*.genie
