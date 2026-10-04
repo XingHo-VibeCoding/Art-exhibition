@@ -4,8 +4,9 @@
 > 前端照它调用，后端照它实现。双方**都不去猜对方的代码**；有分歧，以本文件为准。
 > 要改接口，先改这份文档，再改代码 —— 顺序不能反。
 >
-> - **版本**：v1.1（Day 15 登记并定稿，2026-10-01）
-> - **状态**：**已登记、已定稿、未实现**。本日只登记占位，一行业务代码都不写。
+> - **版本**：v1.3（Day 17 回写，2026-10-04）
+> - **状态**：**部分已实现**。`GET /api/health`（Day 15）与 `GET /api/works`（Day 17）**已上线并通过验证**；
+>   其余 4 个（`/api/like` · `/api/stats` · `/api/note` · `/api/notes`）待 Day 18–19 实现。
 > - **数据来源**：由 `mvp/index.html` 的真实页面结构反推（七个页面动作 → 五个待实现接口）。
 
 ---
@@ -184,11 +185,11 @@
 | 错误 | 405 `METHOD_NOT_ALLOWED`（非 GET） |
 | 实测地址 | `https://art-exhibition-d7ggtul83d566a6c9.service.tcloudbase.com/api/health` |
 
-> 说明：此接口为**唯一已上线**的接口，其响应形状是 §3 之外的极简形态（不含 `data` 包裹），因为它是部署探针而非业务接口。后续业务接口一律遵循 §3。
+> 说明：此接口是**第一个上线的接口**（Day 17 起 `GET /api/works` 亦已上线）。其响应形状是 §3 之外的极简形态（不含 `data` 包裹），因为它是部署探针而非业务接口；后续业务接口一律遵循 §3。
 
 ---
 
-### 4.1 `GET /api/works` · 读取作品列表
+### 4.1 `GET /api/works` · 读取作品列表 ✅ **已实现（Day 17）**
 
 > **清单特意点名的漏项：一定不能忘列表读取接口。** 页面初始渲染的全部数据都来自这里。
 
@@ -199,6 +200,7 @@
 | Query 参数 | `series`（可选）展厅 id，用于只取一个展厅；缺省 = 全部<br>`limit`（可选）最多返回条数，缺省 = 全部 |
 | 请求体 | 无 |
 | 响应 200 | `{ "ok": true, "data": { "series": [...], "works": [...] } }` |
+| 实测地址 | `https://art-exhibition-d7ggtul83d566a6c9.service.tcloudbase.com/api/works` |
 
 **`data.series[]` 形状**：
 
@@ -210,21 +212,27 @@
 
 ```json
 {
-  "_id": "images-arcana-01-the-fool",
+  "_id": "arcana-01-494x741",
   "name": "THE FOOL",
   "img": "images/arcana/01_愚者_0_THE-FOOL_494x741.png",
   "series": "arcana",
   "material": "print",
-  "note": "轻装上路的人站在悬崖边……",
+  "note": "轻装上路的人站在悬崖边，脚下的空白既像危险，也像尚未写下的命运。",
   "verse": null,
-  "order": 1,
-  "createdAt": 1790000000000
+  "order": 30,
+  "createdAt": 1759363200000
 }
 ```
 
 **排序**：`works` 按 `order` 升序；`series` 按前端导航固定顺序（`theology` → `arcana` → `anime-worlds` → `other-works`）。
 
-**错误**：400 `INVALID_PARAM`（`series` 值不在枚举内）。
+**错误**：400 `INVALID_PARAM`（`series` 不在枚举内、`limit` 非大于 0 的整数）、405 `METHOD_NOT_ALLOWED`（非 `GET`）、500 `INTERNAL_ERROR`（数据库读取失败；`message` 一律中文，不透出英文原文与表结构细节）。
+
+> **实现说明（Day 17，2026-10-04）**：数据来自 PostgreSQL 的 `public.works` 表，经数据库
+> **Data API**（`{envId}.api.tcloudbasegateway.com/v1/rdb/rest/works`，基于 PostgREST）读取。
+> 云函数**不直连数据库**；API Key 仅存于服务端环境变量，永不进代码、前端与仓库。
+> 另有两条实现约定：① `data.series[].count` 恒为**全库**该展厅作品总数，**不随** `?series=` / `?limit=` 缩小（它是导航基数）；
+> ② 参数**不拼接 SQL** —— 先过枚举/类型白名单，再交给 Data API 预编译执行。
 
 ---
 
@@ -322,8 +330,8 @@
 
 | 天 | 做什么 | 对应接口 |
 |---|---|---|
-| Day 16 | 建三张表 + 灌入 92 条作品数据 | （建表，无接口） |
-| Day 17 | 实现列表读取，前端从写死改为 fetch | `GET /api/works` |
+| Day 16 | 建三张表 + 灌入 **85** 条作品数据（✅ 已完成） | （建表，无接口） |
+| Day 17 | 实现列表读取（✅ 后端已完成并验证；前端接入仍按原计划在 Day 20） | `GET /api/works` |
 | Day 18 | 实现点赞 | `POST /api/like` |
 | Day 19 | 实现感想读写 + 统计 | `POST /api/note`、`GET /api/notes`、`GET /api/stats` |
 | Day 20 | 配 CORS、前端接 SDK、全链路联调 | 全部 |
@@ -350,3 +358,4 @@
 | 2026-10-01 | v1.0 | 首次登记：3 表 + 6 接口 + 统一错误形状（Day 15，仅登记不实现） | AI 起草 |
 | 2026-10-01 | **v1.1** | 主人逐行核对通过；两条待决项裁定（点赞=切换式、文档置主目录），§7 由「待拍板」转为「已拍板」 | AI 起草，主人裁定 |
 | 2026-10-02 | **v1.2** | Day 16 真实建表后回写：新增 §2.4 两条生成规则（`_id` 格式、`order` 按展厅重排 1–85）与 §2.5 脚本位置；§2.1 补记实际数据量 85 行及各厅分布；澄清 `series` 只认页面真实渲染的 4 值（`SOURCE_SERIES` 的 6 组为中间态，不入库） | AI 起草，主人拍板 |
+| 2026-10-04 | **v1.3** | Day 17 实现并上线 `GET /api/works`：§4.1 标记「✅ 已实现」，补实测地址、错误码清单与实现说明（Data API 读取 / `count` 恒为全库数 / 参数不拼 SQL）。**修正两处笔误**：§4.1 示例 `_id`（`images-arcana-01-the-fool` → 真值 `arcana-01-494x741`，`order` 同步 1 → 30）、§6 的「灌入 92 条」→ **85** 条；§4.0 说明中「唯一已上线的接口」表述更新 | AI 起草，主人拍板 |

@@ -1,0 +1,7 @@
+{
+  "name": "works",
+  "version": "1.0.0",
+  "description": "读取作品列表：GET /api/works，数据来自 PostgreSQL public.works（契约 §4.1）",
+  "main": "index.js",
+  "private": true
+}
