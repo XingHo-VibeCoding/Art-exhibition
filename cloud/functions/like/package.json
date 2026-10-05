@@ -1,0 +1,7 @@
+{
+  "name": "like",
+  "version": "1.0.0",
+  "description": "匿名点赞（切换式）：POST /api/like，写入 PostgreSQL public.likes（契约 §4.2）",
+  "main": "index.js",
+  "private": true
+}
