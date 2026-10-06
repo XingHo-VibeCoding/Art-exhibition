@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Art Exhibition — Console</title>
+<meta name="description" content="Art Exhibition — live data console">
+<!-- 内联 SVG 图标，与作品集同一枚（断开外部依赖也能显示） -->
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%2320292A'/%3E%3Crect x='3' y='6.5' width='10' height='3' fill='%23C88A59'/%3E%3C/svg%3E">
+
+<!-- ==========================================================================
+     配色：直接沿用作品集 mvp/index.html 的 :root 变量，
+     让检查台「看起来本来就是这个展的一部分」——不是贴上去的工具页。
+     ======================================================================== -->
+<style>
+  :root{
+    --wall:      #20292A;                    /* 主墙：矿石蓝绿（与作品集一致） */
+    --wall-deep: #111819;                    /* 暗部：玄武岩 */
+    --mat:       #ECE9DF;                    /* 卡纸：未漂白的纤维纸 */
+    --ink:       #F0EEE6;                    /* 墨：浅色字 */
+    --ink-2:     #AAB6B1;                    /* 第二墨：冷灰绿 */
+    --ink-soft:  rgba(240,238,230,.68);
+    --ink-faint: rgba(240,238,230,.42);
+    --accent:    #C88A59;                    /* 赭石：唯一强调色 */
+    --ink-on-mat:#242522;
+    --ok:        #7FB08A;                    /* 健康：低饱和的苔绿（新增，克制） */
+    --bad:       #C86A59;                    /* 异常：与赭石同族的暖红（新增） */
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    background:var(--wall);
+    color:var(--ink);
+    font-family:"Helvetica Neue",Helvetica,Arial,"Segoe UI",system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{background:var(--accent);color:var(--wall-deep)}
+
+  /* 瑞士国际主义：字号本身是图形，不靠装饰 */
+  .sheet{
+    min-height:100vh;
+    min-height:100dvh;
+    padding:clamp(24px,4vw,56px) clamp(20px,5vw,72px) clamp(28px,4vw,52px);
+    display:flex;
+    flex-direction:column;
+    gap:clamp(22px,3.4vw,40px);
+    max-width:1280px;
+    margin:0 auto;
+  }
+
+  /* ---------- 页头 ---------- */
+  header.head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:24px;
+    flex-wrap:wrap;
+    border-bottom:1px solid rgba(240,238,230,.14);
+    padding-bottom:clamp(16px,2.4vw,26px);
+  }
+  .title{
+    font-size:clamp(26px,5.4vw,52px);
+    line-height:1.04;
+    letter-spacing:-0.02em;
+    font-weight:700;
+  }
+  .title .ghost{color:var(--accent);opacity:.34;margin-right:-100%;display:block;position:relative;top:2px;left:2px}
+  .title .solid{position:relative}
+  .sub{
+    margin-top:10px;
+    font-size:clamp(11px,1.3vw,13px);
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-2);
+  }
+  .stamp{
+    text-align:right;
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    min-width:180px;
+  }
+  .stamp .val{color:var(--ink-soft);font-variant-numeric:tabular-nums}
+
+  /* ---------- 三块面板的共同骨架 ---------- */
+  .panels{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:clamp(16px,2.2vw,26px);
+    flex:1;
+    align-content:start;
+  }
+  .panel{
+    background:rgba(255,255,255,.035);
+    border:1px solid rgba(240,238,230,.12);
+    padding:clamp(16px,2.4vw,28px);
+  }
+  .panel-tag{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:16px;
+    margin-bottom:clamp(12px,1.8vw,20px);
+  }
+  .panel-tag h2{
+    font-size:clamp(13px,1.7vw,16px);
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    font-weight:600;
+  }
+  .panel-tag .no{font-size:11px;color:var(--accent);letter-spacing:.2em;font-variant-numeric:tabular-nums}
+
+  /* 占位态：还没接线时显示，等板块②逐条填 */
+  .pending{
+    border:1px dashed rgba(240,238,230,.22);
+    padding:22px 20px;
+    color:var(--ink-faint);
+    font-size:12.5px;
+    letter-spacing:.06em;
+    line-height:1.7;
+  }
+
+  footer.foot{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    gap:16px;
+    flex-wrap:wrap;
+    font-size:10.5px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+    border-top:1px solid rgba(240,238,230,.14);
+    padding-top:14px;
+  }
+  .foot .no{color:var(--accent)}
+
+  /* 每个面板加一条极细的顶部色线，作为「区分」而非「装饰」 */
+  .panel{position:relative}
+  .panel::before{
+    content:"";
+    position:absolute;
+    left:0;top:0;
+    width:34px;height:2px;
+    background:var(--accent);
+  }
+
+  /* ---------- 状态徽标（面板 01 用） ---------- */
+  .status{
+    display:inline-flex;
+    align-items:center;
+    gap:9px;
+    font-size:13px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:var(--ink-faint);
+    flex:none;
+  }
+  .dot.ok{background:var(--ok);box-shadow:0 0 0 3px rgba(127,176,138,.16)}
+  .dot.bad{background:var(--bad);box-shadow:0 0 0 3px rgba(200,106,89,.16)}
+  .dot.wait{background:var(--ink-faint)}
+  .status .word{color:var(--ink)}
+  .status .word.ok{color:var(--ok)}
+  .status .word.bad{color:var(--bad)}
+
+  /* 键值对照表：左标签右值，等宽数字 */
+  .kv{
+    margin-top:16px;
+    display:grid;
+    grid-template-columns:auto 1fr;
+    gap:9px 20px;
+    font-size:12.5px;
+    line-height:1.5;
+  }
+  .kv dt{color:var(--ink-faint);letter-spacing:.08em;text-transform:uppercase;font-size:10.5px;padding-top:2px}
+  .kv dd{color:var(--ink-soft);font-variant-numeric:tabular-nums;word-break:break-all}
+  .kv dd .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:var(--ink-2)}
+
+  /* ---------- 四厅网格（面板 02 用） ---------- */
+  .halls{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:clamp(12px,1.6vw,20px);
+  }
+  .hall{
+    border:1px solid rgba(240,238,230,.12);
+    background:rgba(0,0,0,.14);
+    padding:14px 15px 6px;
+  }
+  .hall-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:10px;
+    padding-bottom:10px;
+    margin-bottom:8px;
+    border-bottom:1px solid rgba(240,238,230,.14);
+  }
+  .hall-head .nm{
+    font-size:11.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink);
+    font-weight:600;
+  }
+  .hall-head .ct{
+    font-size:11px;
+    color:var(--accent);
+    font-variant-numeric:tabular-nums;
+    letter-spacing:.06em;
+  }
+  .hall-list{
+    list-style:none;
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+    max-height:238px;
+    overflow:auto;
+    padding-right:4px;
+  }
+  .hall-list li{
+    display:flex;
+    gap:9px;
+    font-size:11.5px;
+    line-height:1.42;
+    color:var(--ink-soft);
+  }
+  .hall-list li .idx{
+    flex:none;
+    width:20px;
+    color:var(--ink-faint);
+    font-variant-numeric:tabular-nums;
+    text-align:right;
+  }
+  .hall-list li .t{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  /* 滚动条：细、低调，不喧宾夺主 */
+  .hall-list::-webkit-scrollbar{width:6px}
+  .hall-list::-webkit-scrollbar-thumb{background:rgba(240,238,230,.18)}
+  .hall-list::-webkit-scrollbar-track{background:transparent}
+
+  .data-sum{
+    margin-top:16px;
+    padding-top:13px;
+    border-top:1px solid rgba(240,238,230,.12);
+    display:flex;
+    gap:clamp(18px,3vw,42px);
+    flex-wrap:wrap;
+    font-size:11px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-faint);
+  }
+  .data-sum b{display:block;margin-top:4px;color:var(--ink);font-size:15px;font-variant-numeric:tabular-nums;letter-spacing:0}
+
+  /* ---------- 写入测试（面板 03 用） ---------- */
+  .write-row{
+    display:flex;
+    align-items:flex-end;
+    gap:14px;
+    flex-wrap:wrap;
+  }
+  .field{display:flex;flex-direction:column;gap:7px}
+  .field label{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-faint)}
+  .field select{
+    appearance:none;
+    background:rgba(0,0,0,.28);
+    border:1px solid rgba(240,238,230,.18);
+    color:var(--ink);
+    padding:9px 32px 9px 12px;
+    font-size:12.5px;
+    font-family:inherit;
+    letter-spacing:.02em;
+    cursor:pointer;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23AAB6B1' stroke-width='1.4'/%3E%3C/svg%3E");
+    background-repeat:no-repeat;
+    background-position:right 11px center;
+    max-width:min(320px,60vw);
+  }
+  .field select:focus{outline:none;border-color:var(--accent)}
+  .btn{
+    appearance:none;
+    background:var(--accent);
+    color:#1a1206;
+    border:none;
+    padding:11px 24px;
+    font-size:12px;
+    font-family:inherit;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    font-weight:700;
+    cursor:pointer;
+    transition:opacity .18s ease;
+  }
+  .btn:hover{opacity:.86}
+  .btn:disabled{opacity:.4;cursor:default}
+
+  .write-out{
+    margin-top:18px;
+    padding-top:14px;
+    border-top:1px solid rgba(240,238,230,.12);
+    font-size:12px;
+    line-height:1.75;
+    letter-spacing:.03em;
+    color:var(--ink-soft);
+    min-height:52px;
+    font-variant-numeric:tabular-nums;
+  }
+  .write-out .tag{
+    display:inline-block;
+    padding:2px 9px;
+    font-size:10.5px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    margin-right:9px;
+    border:1px solid currentColor;
+    vertical-align:1px;
+  }
+  .write-out .t-ok{color:var(--ok)}
+  .write-out .t-bad{color:var(--bad)}
+  .write-out .t-run{color:var(--accent)}
+  .write-out .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--ink-2);word-break:break-all}
+</style>
+</head>
+<body>
+  <main class="sheet">
+
+    <!-- ==================== 页头 ==================== -->
+    <header class="head">
+      <div>
+        <h1 class="title">
+          <span class="ghost" aria-hidden="true">ART EXHIBITION</span>
+          <span class="solid">LIVE CONSOLE</span>
+        </h1>
+        <p class="sub">Reading the exhibition database in real time</p>
+      </div>
+      <div class="stamp">
+        <span>Data updated</span>
+        <span class="val" id="stampUpdated">— —</span>
+      </div>
+    </header>
+
+    <!-- ==================== 三块面板 ==================== -->
+    <section class="panels">
+
+      <!-- ① 健康状态 -->
+      <div class="panel" id="panelHealth">
+        <div class="panel-tag">
+          <h2>Service health</h2>
+          <span class="no">01</span>
+        </div>
+        <div id="healthBox">
+          <span class="status"><span class="dot wait" id="healthDot"></span><span class="word" id="healthWord">Checking…</span></span>
+          <dl class="kv">
+            <dt>Endpoint</dt><dd class="mono" id="healthEndpoint">—</dd>
+            <dt>RTT</dt><dd id="healthRtt">—</dd>
+            <dt>Service</dt><dd id="healthService">—</dd>
+          </dl>
+        </div>
+      </div>
+
+      <!-- ② 真实数据 -->
+      <div class="panel" id="panelData">
+        <div class="panel-tag">
+          <h2>Gallery data</h2>
+          <span class="no">02</span>
+        </div>
+        <div id="dataBox">
+          <div class="halls" id="halls">—</div>
+          <div class="data-sum" id="dataSum" style="display:none">
+            <div>Total works<b id="sumTotal">—</b></div>
+            <div>Halls<b id="sumHalls">—</b></div>
+            <div>Response<b id="sumMs">—</b></div>
+            <div>Source<b id="sumSrc">—</b></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ③ 写入测试 -->
+      <div class="panel" id="panelWrite">
+        <div class="panel-tag">
+          <h2>Write test</h2>
+          <span class="no">03</span>
+        </div>
+        <div class="write-row">
+          <div class="field">
+            <label for="workSel">Target work</label>
+            <select id="workSel">
+              <option value="">Loading works…</option>
+            </select>
+          </div>
+          <button class="btn" id="likeBtn" disabled>Toggle like</button>
+        </div>
+        <div class="write-out" id="writeOut">
+          Pick a work, then press <b>TOGGLE LIKE</b>. A click writes a row into the
+          <span class="mono">likes</span> table; pressing again removes it — the count
+          goes up by one, then back down. Nothing is left behind.
+        </div>
+      </div>
+
+    </section>
+
+    <footer class="foot">
+      <span>Art Exhibition · Console</span>
+      <span class="no">2026</span>
+    </footer>
+
+  </main>
+
+<script>
+/* ==========================================================================
+   ★★ 门牌：接口地址常量（全站唯一来源）★★
+   --------------------------------------------------------------------------
+   检查台所有网络请求都从这里取地址。要换环境（如切到另一个 CloudBase
+   环境），只改这一处，下面的代码一个字都不用动。
+
+   为什么放在最顶端、单独成一个常量：
+     1. 一眼可见——「数据从哪来」不用翻代码就能回答；
+     2. 唯一来源——地址只写一遍，不会散落在多处；
+     3. 好核对——验收时对照 api-contract.md §1 的「基地址」即可。
+
+   契约依据：api-contract.md §1 通用约定 → 基地址
+   ======================================================================== */
+var API_BASE = 'https://art-exhibition-d7ggtul83d566a6c9.service.tcloudbase.com';
+
+/* 接口路径清单（与契约 §4 的路径一一对应）。
+   今天只用到 health / works / like 三个；stats / note / notes 尚未上线，
+   故此处暂不登记，等它们实现后再补。 */
+var API = {
+  health: API_BASE + '/api/health',
+  works:  API_BASE + '/api/works',
+  like:   API_BASE + '/api/like'
+};
+
+console.log('[checkup] API_BASE =', API_BASE);
+console.log('[checkup] endpoints =', API);
+
+/* ==========================================================================
+   通用取数小工具
+   --------------------------------------------------------------------------
+   fetchJSON：发一次 GET，返回统一形状 { ok, status, data, ms, error }
+     · ok    —— HTTP 2xx 且响应体 ok:true
+     · ms    —— 往返耗时（毫秒），用于健康面板显示
+     · error —— 失败时的中文说明（网络错 / HTTP 错 / 业务错 三分类）
+   为什么要统一：三个面板都要「发请求 + 判成败 + 记耗时」，
+   写一遍共用，避免每个面板各抄一套（这正是 Day 19 学到的教训）。
+   ======================================================================== */
+async function fetchJSON(url, options){
+  var t0 = performance.now();
+  try{
+    var res = await fetch(url, options);
+    var ms = Math.round(performance.now() - t0);
+    var body = null;
+    try{ body = await res.json(); }catch(e){ body = null; }
+
+    /* 业务层判定：契约 §3.1 —— 成功 = ok:true */
+    if (res.status >= 200 && res.status < 300 && body && body.ok === true){
+      return { ok:true, status:res.status, data:body, ms:ms, error:null };
+    }
+    /* 失败：优先用契约 §3.2 的中文 message */
+    var msg = (body && body.error && body.error.message)
+           || (body && body.message)
+           || ('HTTP ' + res.status);
+    return { ok:false, status:res.status, data:body, ms:ms, error:msg };
+
+  }catch(e){
+    var ms2 = Math.round(performance.now() - t0);
+    /* 走到这里通常是：断网、DNS 失败、或跨域被浏览器拦下（CORS） */
+    return { ok:false, status:0, data:null, ms:ms2, error:'网络请求失败：' + e.message };
+  }
+}
+
+/* --------------------------------------------------------------------------
+   面板 01 · 健康状态
+   -------------------------------------------------------------------------- */
+async function loadHealth(){
+  var dot  = document.getElementById('healthDot');
+  var word = document.getElementById('healthWord');
+  var elEp = document.getElementById('healthEndpoint');
+  var elRt = document.getElementById('healthRtt');
+  var elSv = document.getElementById('healthService');
+
+  elEp.textContent = API.health;
+
+  /* /api/health 的响应形状是契约 §4.0 的极简态：{ ok:true, service:'...' } */
+  var r = await fetchJSON(API.health);
+
+  if (r.ok && r.data.service){
+    dot.className  = 'dot ok';
+    word.className = 'word ok';
+    word.textContent = 'Online';
+    elRt.textContent = r.ms + ' ms';
+    elSv.textContent = r.data.service;
+  }else{
+    dot.className  = 'dot bad';
+    word.className = 'word bad';
+    word.textContent = 'Unavailable';
+    elRt.textContent = r.ms + ' ms';
+    elSv.textContent = r.error || '未知错误';
+  }
+  return r;
+}
+
+/* --------------------------------------------------------------------------
+   面板 02 · 四厅真实数据
+   --------------------------------------------------------------------------
+   契约 §4.1：GET /api/works 返回
+     data.series[] —— 四个展厅 { id, name, count }，count 恒为全库该厅总数
+     data.works[]  —— 全部作品，按 order 升序，每条含 _id/name/series/note...
+   本面板：按 series 把 works 分到四个厅下，逐条列出「序号 + 标题」。
+   -------------------------------------------------------------------------- */
+async function loadWorks(){
+  var hallsEl = document.getElementById('halls');
+  var sumEl   = document.getElementById('dataSum');
+
+  var r = await fetchJSON(API.works);
+
+  if (!r.ok){
+    hallsEl.innerHTML = '';
+    var p = document.createElement('div');
+    p.className = 'pending';
+    p.textContent = '读取失败：' + (r.error || '未知错误');
+    hallsEl.appendChild(p);
+    sumEl.style.display = 'none';
+    return r;
+  }
+
+  var series = r.data.data.series || [];
+  var works  = r.data.data.works  || [];
+
+  /* 按 series 分组（不改顺序，保持接口给的 order 升序） */
+  var bySeries = {};
+  works.forEach(function(w){
+    (bySeries[w.series] = bySeries[w.series] || []).push(w);
+  });
+
+  /* 渲染四厅 */
+  hallsEl.innerHTML = '';
+  series.forEach(function(s){
+    var list = bySeries[s.id] || [];
+
+    var hall = document.createElement('div');
+    hall.className = 'hall';
+
+    var head = document.createElement('div');
+    head.className = 'hall-head';
+    var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = s.name;
+    var ct = document.createElement('span'); ct.className = 'ct'; ct.textContent = s.count + ' works';
+    head.appendChild(nm); head.appendChild(ct);
+
+    var ul = document.createElement('ul');
+    ul.className = 'hall-list';
+    list.forEach(function(w, i){
+      var li = document.createElement('li');
+      var ix = document.createElement('span'); ix.className = 'idx'; ix.textContent = String(i + 1).padStart(2, '0');
+      var tt = document.createElement('span'); tt.className = 't';
+      tt.textContent = w.name;
+      tt.title = w.name + ' · ' + w._id;    /* 悬停可见 _id，方便核对数据库 */
+      li.appendChild(ix); li.appendChild(tt);
+      ul.appendChild(li);
+    });
+
+    hall.appendChild(head);
+    hall.appendChild(ul);
+    hallsEl.appendChild(hall);
+  });
+
+  /* 汇总条 */
+  document.getElementById('sumTotal').textContent = works.length;
+  document.getElementById('sumHalls').textContent = series.length;
+  document.getElementById('sumMs').textContent    = r.ms + ' ms';
+  document.getElementById('sumSrc').textContent   = 'PostgreSQL';
+  sumEl.style.display = 'flex';
+
+  return r;
+}
+
+/* --------------------------------------------------------------------------
+   面板 03 · 写入测试
+   --------------------------------------------------------------------------
+   契约 §4.2：POST /api/like
+     请求体 { workId, visitorId }
+     响应   { ok:true, data:{ workId, likes, liked } }
+     行为   toggle —— 未赞过则 +1（liked:true）；已赞过则 -1（liked:false）
+   本面板用一个固定的测试 visitorId，便于在库里辨认「这是检查台写的」。
+   -------------------------------------------------------------------------- */
+
+/* 固定的测试访客标识（纯 ASCII）。所有检查台写入都归到它名下，
+   方便日后在数据库里一眼分清「测试数据」与「真实访客数据」。 */
+var TEST_VISITOR = 'console-checkup-demo';
+
+/* 写入面板的取数小工具：带 POST 的 fetchJSON 封装 */
+function postJSON(url, payload){
+  return fetchJSON(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+}
+
+function mountWriteTest(works){
+  var sel = document.getElementById('workSel');
+  var btn = document.getElementById('likeBtn');
+  var out = document.getElementById('writeOut');
+
+  /* 用真实作品填充下拉框（顺序即接口的 order 升序） */
+  sel.innerHTML = '';
+  works.forEach(function(w){
+    var o = document.createElement('option');
+    o.value = w._id;
+    o.textContent = w.name + '  ·  ' + w._id;
+    sel.appendChild(o);
+  });
+  btn.disabled = works.length === 0;
+
+  btn.addEventListener('click', async function(){
+    var workId = sel.value;
+    if (!workId) return;
+
+    btn.disabled = true;
+    out.innerHTML = '<span class="tag t-run">Sending</span>POST /api/like …';
+
+    var r = await postJSON(API.like, { workId: workId, visitorId: TEST_VISITOR });
+
+    if (r.ok){
+      var d = r.data.data;
+      out.innerHTML =
+        '<span class="tag t-ok">' + (d.liked ? '+1 liked' : '−1 unliked') + '</span>' +
+        'workId <span class="mono">' + d.workId + '</span><br>' +
+        'likes = <b>' + d.likes + '</b> ｜ liked = <b>' + d.liked + '</b>' +
+        ' ｜ ' + r.ms + ' ms<br>' +
+        '<span style="color:var(--ink-faint);font-size:11px">' +
+        (d.liked ? 'A row was inserted into the likes table. Press again to remove it.'
+                 : 'That row was removed. The table is back to its previous state.') +
+        '</span>';
+    }else{
+      out.innerHTML =
+        '<span class="tag t-bad">' + (r.status || 'ERR') + '</span>' +
+        (r.error || '未知错误') + '<br>' +
+        '<span style="color:var(--ink-faint);font-size:11px">' +
+        'No change was written to the database.</span>';
+    }
+
+    btn.disabled = false;
+  });
+}
+
+/* 板块②-4：三个面板全部接上。
+   loadWorks 拿到作品后，把列表交给写入面板填下拉框。 */
+loadHealth();
+loadWorks().then(function(r){
+  if (r && r.ok && r.data && r.data.data){
+    mountWriteTest(r.data.data.works || []);
+  }
+});
+</script>
+</body>
+</html>
