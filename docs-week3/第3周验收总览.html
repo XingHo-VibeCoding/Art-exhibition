@@ -1,0 +1,89 @@
+<!DOCTYPE html><html lang="zh"><head><meta charset="utf-8">
+<title>第 3 周验收 · Day 21</title>
+<style>
+  :root{ --wall:#20292A; --ink:#F0EEE6; --ochre:#C88A59; --dim:#8A9694; --line:rgba(240,238,230,.14);
+         --ok:#5E9E7A; --bad:#C8442E; --wait:#8A8478; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{ background:var(--wall); color:var(--ink); padding:44px 48px 56px;
+        font-family:"Helvetica Neue",Helvetica,"PingFang SC","Microsoft YaHei",sans-serif;
+        -webkit-font-smoothing:antialiased; }
+  .kicker{ font-size:11px; letter-spacing:.22em; color:var(--ochre); text-transform:uppercase; }
+  h1{ font-size:40px; letter-spacing:.01em; font-weight:700; margin:10px 0 4px; }
+  .sub{ font-size:13px; color:var(--dim); letter-spacing:.05em; }
+  .meta{ margin-top:16px; font-size:12px; color:var(--dim); line-height:1.9; }
+  .meta b{ color:var(--ink); font-weight:500; }
+  .sec{ margin-top:34px; }
+  .sec-h{ display:flex; align-items:baseline; gap:12px; border-bottom:1px solid var(--line); padding-bottom:8px; }
+  .sec-h h2{ font-size:15px; letter-spacing:.14em; text-transform:uppercase; font-weight:600; }
+  .sec-h span{ font-size:12px; color:var(--dim); }
+  table{ width:100%; border-collapse:collapse; margin-top:12px; }
+  td,th{ text-align:left; font-size:12.5px; padding:8px 10px; border-bottom:1px solid rgba(240,238,230,.07); vertical-align:top;}
+  th{ font-size:10.5px; letter-spacing:.16em; color:var(--dim); text-transform:uppercase; font-weight:600;}
+  td.id{ width:38px; color:var(--ochre); font-family:ui-monospace,Consolas,monospace; font-size:11.5px;}
+  td.ev{ color:var(--dim); font-size:11.5px; line-height:1.65;}
+  .b{ display:inline-block; padding:2px 8px; border-radius:2px; font-size:10.5px; letter-spacing:.1em; font-weight:700; }
+  .pass{ background:rgba(94,158,122,.20); color:#8FD0AC; border:1px solid rgba(94,158,122,.5);}
+  .none{ background:rgba(138,132,120,.20); color:#C4BCA8; border:1px solid rgba(138,132,120,.5);}
+  .fail{ background:rgba(200,68,46,.22); color:#F0907C; border:1px solid rgba(200,68,46,.55);}
+  .tally{ margin-top:14px; display:flex; gap:26px; font-size:12px; color:var(--dim);}
+  .tally b{ font-size:22px; display:block; font-weight:700; margin-bottom:2px;}
+  .tally .p b{ color:#8FD0AC } .tally .n b{ color:#C4BCA8 }
+  .three{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-top:12px;}
+  .card{ border:1px solid var(--line); padding:14px 16px; background:rgba(240,238,230,.025);}
+  .card h3{ font-size:12px; letter-spacing:.1em; color:var(--ochre); margin-bottom:8px; }
+  .card p{ font-size:11.5px; color:var(--dim); line-height:1.75; }
+  .card p b{ color:var(--ink); font-weight:500; }
+  .flow{ margin-top:12px; font-size:12.5px; line-height:2.1; color:var(--ink);}
+  .flow em{ color:var(--ochre); font-style:normal; font-weight:600; }
+  .flow small{ color:var(--dim); }
+  .foot{ margin-top:38px; padding-top:14px; border-top:1px solid var(--line);
+         font-size:10.5px; letter-spacing:.16em; color:var(--dim); text-transform:uppercase;
+         display:flex; justify-content:space-between;}
+</style></head><body>
+
+<div class="kicker">Week 3 · Day 21 Acceptance</div>
+<h1>第 3 周验收 · ART EXHIBITION</h1>
+<div class="sub">现场重跑取证 · 不引用记忆 · 状态只用 PASS / FAIL / 未执行</div>
+<div class="meta">
+  <b>验收时间</b>：2026/10/7 15:38:29　｜　<b>重跑命令</b>：_ref/day21-live-accept.js<br>
+  <b>检查台</b>：art-exhibition-d7ggtul83d566a6c9-1499147979.tcloudbaseapp.com/checkup.html　｜　<b>接口</b>：art-exhibition-d7ggtul83d566a6c9.service.tcloudbase.com
+</div>
+
+<div class="sec">
+  <div class="sec-h"><h2>一 · 验收表</h2><span>每项均注明怎么验证；PASS 项均可现场重跑复现</span></div>
+  <table>
+    <tr><th>#</th><th>验收项</th><th>状态</th><th>证据</th></tr>
+    <tr><td class="id">A1</td><td>GET /api/health 公网可达</td><td><span class="b pass">PASS</span></td><td class="ev">status=200 · {"ok":true,"service":"art-exhibition"}</td></tr><tr><td class="id">A2</td><td>GET /api/works 返回真库数据</td><td><span class="b pass">PASS</span></td><td class="ev">status=200 · 85 件 · 29/22/15/19（与逐条统计一致）</td></tr><tr><td class="id">A3</td><td>响应形状符合契约 §3/§4.1</td><td><span class="b pass">PASS</span></td><td class="ev">顶层键 ok,data · 九字段齐全 · order 升序</td></tr><tr><td class="id">B2</td><td>POST /api/like 真实写入</td><td><span class="b pass">PASS</span></td><td class="ev">status=200 · liked=true · likes 5→6</td></tr><tr><td class="id">B3</td><td>写入后读回验证</td><td><span class="b pass">PASS</span></td><td class="ev">二次提交=取消 · likes 6→5 · 差值 1（证明落库）</td></tr><tr><td class="id">B4</td><td>零残留</td><td><span class="b pass">PASS</span></td><td class="ev">第三次 likes=6 · 回到起点 · 无测试垃圾</td></tr><tr><td class="id">C1</td><td>错误形状统一</td><td><span class="b pass">PASS</span></td><td class="ev">400 INVALID_PARAM · 无 data 字段</td></tr><tr><td class="id">C2</td><td>检查台公网可访问（同伴视角）</td><td><span class="b pass">PASS</span></td><td class="ev">过提醒页后 200 · 标题 LIVE CONSOLE · 零报错</td></tr><tr><td class="id">C3</td><td>作品集首页未被覆盖</td><td><span class="b pass">PASS</span></td><td class="ev">bytes=142760 · 与本地严格相等</td></tr><tr><td class="id">C4</td><td>分层重构行为不变</td><td><span class="b pass">PASS</span></td><td class="ev">本地 36/36 全等 · 线上 13/13 一致</td></tr><tr><td class="id">D4</td><td>CORS 精确白名单生效</td><td><span class="b pass">PASS</span></td><td class="ev">真域名回 allow-origin · 假域名不回 · OPTIONS 204</td></tr><tr><td class="id">E1</td><td>api-contract.md 完整性</td><td><span class="b pass">PASS</span></td><td class="ev">6 接口全有定义 · 偏差已登记（v1.6）</td></tr><tr><td class="id">B1</td><td>schema/seed 脚本可重复执行</td><td><span class="b none">未执行</span></td><td class="ev">两脚本都 DROP 表，上线后禁跑（契约 §2.5）</td></tr><tr><td class="id">D1</td><td>GET /api/stats</td><td><span class="b none">未执行</span></td><td class="ev">未实装 · 404 INVALID_PATH · 排入下周</td></tr><tr><td class="id">D2</td><td>GET /api/notes</td><td><span class="b none">未执行</span></td><td class="ev">未实装 · 404 INVALID_PATH · 排入下周</td></tr><tr><td class="id">D3</td><td>POST /api/note</td><td><span class="b none">未执行</span></td><td class="ev">未实装 · 排入下周</td></tr>
+  </table>
+  <div class="tally">
+    <div class="p"><b>12</b>PASS</div>
+    <div><b>0</b>FAIL</div>
+    <div class="n"><b>4</b>未执行</div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="sec-h"><h2>二 · 同伴交叉验证</h2><span>三行结论模板已备 · 待同伴用自己设备回填</span></div>
+  <div class="three">
+    <div class="card"><h3>① 能否打开</h3><p><b>模板</b>：过掉「确定访问」提醒页后，三块面板是否正常显示、有无真实数据。<br><b>我的自测</b>：能打开，标题 LIVE CONSOLE，四厅 85 件。</p></div>
+    <div class="card"><h3>② 能否真实读写</h3><p><b>模板</b>：点 TOGGLE LIKE 后 likes 是否变化、刷新后是否还在。<br><b>我的自测</b>：OPTIONS 204 + POST 200，刷新后稳定、零残留。</p></div>
+    <div class="card"><h3>③ 有无报错</h3><p><b>模板</b>：Console 有无红色报错、页面有无白屏错位。<br><b>我的自测</b>：控制台错误 0 条，未捕获异常 0 条。</p></div>
+  </div>
+  <div class="meta" style="margin-top:12px">⚠️ <b>给同伴的第一句话</b>：若先跳出「页面访问提示 / 风险提醒」，那是腾讯云测试域名的提示页，<b>点「确定访问」即可进入</b> —— 不是网站坏了。</div>
+</div>
+
+<div class="sec">
+  <div class="sec-h"><h2>三 · 演示提纲</h2><span>固定四段 · 实测 4 分 19 秒 · 已完整走通</span></div>
+  <div class="flow">
+    <em>① 用户问题</em>　<small>「第二周它很好看，但它是死的」—— 85 幅作品写死在 index.html，改一个字要重新上传</small><br>
+    <em>② 核心流程</em>　<small>公网检查台 → SERVICE HEALTH（ONLINE / 681ms）→ GALLERY DATA（85 件真实数据）→ ★TOGGLE LIKE 真实写入（OPTIONS 204 + POST 200）→ F5 刷新持久化</small><br>
+    <em>③ 提示词改写</em>　<small>模糊「帮我检查做得怎么样」→ 可验收「只允许 PASS/FAIL/未执行，附证据，声称 PASS 的要能当场重跑」</small><br>
+    <em>④ 验证方式</em>　<small>反假抽查重跑 · 同伴换设备三行结论 · 重构双跑逐字节比对 · SQL 改数据刷新即变（真库铁证）</small>
+  </div>
+</div>
+
+<div class="foot">
+  <span>ART EXHIBITION · WEEK 3 CONSOLE</span>
+  <span>2026 · DAY 21</span>
+</div>
+</body></html>
