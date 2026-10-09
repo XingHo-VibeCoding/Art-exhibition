@@ -1,0 +1,7 @@
+{
+  "name": "note",
+  "version": "1.0.0",
+  "description": "感想资源的增删改查：GET/POST/PATCH/DELETE /api/note，读写 PostgreSQL public.notes（契约 §4.4–§4.7）",
+  "main": "index.js",
+  "private": true
+}
