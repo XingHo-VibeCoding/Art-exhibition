@@ -75,7 +75,69 @@ function fail(statusCode, code, message) {
   });
 }
 
+/**
+ * ★ Day 23：把数据访问层的失败翻译成 HTTP 响应 —— 三类分流的总闸。
+ *
+ * 为什么抽成这一个函数：works / like / note 三个接口都要做同一件事，
+ * 各写一遍就会长出三种长相；而契约 §3.3 是错误码的「唯一定义处」，
+ * 那么消费它的地方也该只有一处形态。
+ *
+ * 契约 §3.3「错误三分类」在这里落地：
+ *   第一类 用户输入错 → 400，由各个校验闸直接 fail()，不经过这里
+ *   第二类 网络 / 接口错 → 503（路不通，重试可能好转）
+ *   第三类 服务端错     → 500（我们错了，详细原因进日志）
+ *
+ * ★ 判定依据**只有** r.kind —— 数据访问层明确给出的分类。
+ *   不许靠 HTTP 状态码或英文消息去反推：Data API 会把多种失败折叠成同一个状态码，
+ *   靠状态码猜必然误判（契约 §3.3 判定纪律 2）。
+ *
+ * @param {{ok:false, kind:string, message:string}} r 数据访问层返回的失败结果
+ * @returns 可直接 return 的响应对象
+ */
+function answerFailure(r) {
+  // ── 第二类：网络 / 接口错 ───────────────────────────────────────
+  // 「路不通」和「我们错了」是两件事：前者重试可能好转，后者重试也没用。
+  // 给它们不同的状态码，验收时「断网」与「改错表名」才能拿回两个不同的数字。
+  if (r.kind === 'NETWORK') {
+    return fail(503, 'SERVICE_UNAVAILABLE', '数据暂时拿不到，请稍后再试');
+  }
+
+  // ── 第三类：服务端错 ────────────────────────────────────────────
+  // r.message 是数据层从**白名单映射表**里翻译出来的中文（如「数据库暂时不可用，请稍后再试」），
+  // 已经剔除英文原文、表名、SQL 片段，可以安全给用户看。
+  // 详细的技术原因，数据层已用 console.error 记进服务端日志 —— 给人看人话，给机器看日志。
+  // 缺失时用中性兜底句：宁可模糊，也绝不透出技术细节（契约 §3.3）。
+  return fail(500, 'INTERNAL_ERROR', r.message || '服务端处理请求时出错，请稍后再试');
+}
+
+/**
+ * ★ Day 23 兜底闸：整个请求的最后一道防线。
+ *
+ * ── 它和 answerFailure() 的区别 ──────────────────────────────────
+ *   answerFailure 是**海关**：只检査数据层明明白白报告回来的失败（带 kind 标签）。
+ *   本函数是**围墙**：拦的是压根不走海关的那些 ——
+ *     · event 是 undefined（平台传了个空事件）
+ *     · 某个 JSON.parse 炸了
+ *     · 类型意外、内存溢出……
+ *   它们不返回 {ok:false}，而是**直接抛**。抛出去就是 500 + 一整屏英文堆栈，
+ *   而契约 §3.3 明写「500 不向外暴露堆栈」。这道围墙就是为这句话存在的。
+ *
+ * ── 为什么整段包住，而不是只包业务逻辑 ──────────────────────────
+ *   连 `event.httpMethod` 这种最开头的取值都可能炸（event 若为 undefined）。
+ *   只包业务，等于在大门旁边留了扇没锁的窗。
+ */
 exports.main = async function (event, context) {
+  try {
+    return await handleRequest(event, context);
+  } catch (e) {
+    // 技术细节（英文堆栈）只进服务端日志，供将来排错；
+    // 响应体里只给一句人能看懂的中文 —— 契约 §3.3 第三类「服务端错」
+    console.error('[works] 未捕获异常：' + (e && e.stack ? e.stack : e));
+    return fail(500, 'INTERNAL_ERROR', '服务端处理请求时出错，请稍后再试');
+  }
+};
+
+async function handleRequest(event, context) {
   const method = String(event.httpMethod || 'GET').toUpperCase();
   const path = String(event.path || '');
 
@@ -115,9 +177,11 @@ exports.main = async function (event, context) {
   // ---------- 2. 请求数据库：主查询（★ 一行调用，SQL 全在 repository 里）----------
   // 钥匙检查、地址拼接、超时、英文错误翻译，全部由数据访问层负责。
   // 入口层只判断 r.ok：失败时 r.message 已是可直接放进响应体的中文（契约 §3.2）。
+  // 入口层只判断 r.ok：失败时把整个 r 交给 answerFailure 分类，
+  // 自己不关心是网络断了还是表没了 —— 怎么区分那是数据访问层已经给出的标签。
   const r = await worksRepository.listWorks({ series: seriesFilter, limit: limit });
   if (!r.ok) {
-    return fail(500, 'INTERNAL_ERROR', r.message);
+    return answerFailure(r);
   }
   const works = r.rows;
 
@@ -163,4 +227,4 @@ exports.main = async function (event, context) {
       works: works,
     },
   });
-};
+}

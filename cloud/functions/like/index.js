@@ -67,6 +67,36 @@ function fail(statusCode, code, message) {
   });
 }
 
+/**
+ * ★ Day 23：把数据访问层的失败翻译成 HTTP 响应 —— 三类分流的总闸。
+ * 与 works / note 同构（逻辑一致，差别只在注释里举的例子）。
+ *
+ * 契约 §3.3「错误三分类」在这里落地：
+ *   第一类 用户输入错 → 400，由 pickRequiredString 等校验直接 fail()，不经过这里
+ *   第二类 网络 / 接口错 → 503（路不通，重试可能好转）
+ *   第三类 服务端错     → 500（我们错了，详细原因进日志）
+ *
+ * ⚠️ 本接口的 FK / UNIQUE 两个 kind **不经过这里**：
+ *     它们在业务分支里另有归宿（FK → 404 作品不存在；UNIQUE → 转入取消路径），
+ *     是「业务语义」而不是「故障」，由调用处显式处理。
+ *     这里只负责「出了故障」的那部分 —— 故障与业务的界线清楚了，两边才都清楚。
+ *
+ * ★ 判定依据**只有** r.kind，不许靠 HTTP 状态码或英文消息反推（契约 §3.3 判定纪律 2）。
+ *
+ * @param {{ok:false, kind:string, message:string}} r 数据访问层返回的失败结果
+ * @returns 可直接 return 的响应对象
+ */
+function answerFailure(r) {
+  // ── 第二类：网络 / 接口错 ── 与服务端错分开，验收时才自证得了
+  if (r.kind === 'NETWORK') {
+    return fail(503, 'SERVICE_UNAVAILABLE', '数据暂时拿不到，请稍后再试');
+  }
+
+  // ── 第三类：服务端错 ── r.message 是数据层翻译过的中文（已剔除英文原文、表名、SQL），
+  //    可以直接给用户看；详细技术原因已由数据层 console.error 进日志。
+  return fail(500, 'INTERNAL_ERROR', r.message || '服务端处理请求时出错，请稍后再试');
+}
+
 // 契约 §4.2：workId / visitorId 均为必填，且各 ≤ 64 字符
 const MAX_ID_LEN = 64;
 
@@ -107,7 +137,30 @@ function pickRequiredString(obj, key) {
  *  三、入口
  * ==========================================================================*/
 
+/**
+ * ★ Day 23 兜底闸：整个请求的最后一道防线（与 works / note 同构）。
+ *
+ * ── 它和 answerFailure() 的区别 ──────────────────────────────────
+ *   answerFailure 是**海关**：只检査数据层明明白白报告回来的失败（带 kind 标签）。
+ *   本函数是**围墙**：拦的是压根不走海关的那些 —— event 是 undefined、
+ *   JSON.parse 炸了、类型意外、内存溢出……它们不返回 {ok:false}，而是**直接抛**。
+ *   抛出去就是 500 + 一整屏英文堆栈，而契约 §3.3 明写「500 不向外暴露堆栈」。
+ *
+ * ── 为什么整段包住 ──────────────────────────────────────────────
+ *   连最开头的 `event.httpMethod` 都可能炸（event 若为 undefined）。
+ *   只包业务，等于在大门旁边留了扇没锁的窗。
+ */
 exports.main = async function (event, context) {
+  try {
+    return await handleRequest(event, context);
+  } catch (e) {
+    // 技术细节只进服务端日志；响应体里只给一句中文 —— 契约 §3.3 第三类
+    console.error('[like] 未捕获异常：' + (e && e.stack ? e.stack : e));
+    return fail(500, 'INTERNAL_ERROR', '服务端处理请求时出错，请稍后再试');
+  }
+};
+
+async function handleRequest(event, context) {
   const startedAt = Date.now();
   const method = String(event.httpMethod || 'GET').toUpperCase();
   const path = String(event.path || '');
@@ -166,7 +219,7 @@ exports.main = async function (event, context) {
   //   而契约 §4.2 要求它必须是 404 NOT_FOUND 且 message 能看懂。
   //   显式查询一次，语义最清楚，也把错误拦在写操作之前（不产生任何写副作用）。
   const w = await worksRepository.workExists(workId);
-  if (!w.ok) return fail(500, 'INTERNAL_ERROR', w.message);
+  if (!w.ok) return answerFailure(w);
   if (!w.exists) return fail(404, 'NOT_FOUND', '作品不存在：' + workId);
 
   /* ---------- 闸 7：防重复 —— 本接口的「重复提交」等于「取消」---------- */
@@ -175,14 +228,14 @@ exports.main = async function (event, context) {
   //   真正的防线是数据库层的 (workId, visitorId) 联合唯一约束 ——
   //   应用层这次查询只是为了决定「走插入还是走删除」，撞车了由 23505 兜底。
   const e = await likesRepository.likeExists(workId, visitorId);
-  if (!e.ok) return fail(500, 'INTERNAL_ERROR', e.message);
+  if (!e.ok) return answerFailure(e);
 
   let liked = false; // 本次操作结束后，「这个人」是否处于已赞状态
 
   if (e.exists) {
     /* ---- 分支 A：已赞过 → 取消（删除那条记录）---- */
     const d = await likesRepository.deleteLike(workId, visitorId);
-    if (!d.ok) return fail(500, 'INTERNAL_ERROR', d.message);
+    if (!d.ok) return answerFailure(d);
     liked = false;
   } else {
     /* ---- 分支 B：未赞过 → 点赞（插入一条记录）---- */
@@ -198,10 +251,10 @@ exports.main = async function (event, context) {
         // 并发裸奔的兜底：刚刚有人替我们把这条记录插进去了 —— 按「已赞过」处理，转入取消。
         // 这条分支平时跑不到，但一旦跑到，说明唯一约束真的在替我们挡子弹。
         const d2 = await likesRepository.deleteLike(workId, visitorId);
-        if (!d2.ok) return fail(500, 'INTERNAL_ERROR', d2.message);
+        if (!d2.ok) return answerFailure(d2);
         liked = false;
       } else {
-        return fail(500, 'INTERNAL_ERROR', ins.message);
+        return answerFailure(ins);
       }
     } else {
       liked = true;
@@ -213,7 +266,7 @@ exports.main = async function (event, context) {
   //   这里多花一次往返是故意的 —— 它让这个接口能自证「真的读到了库」：
   //   同一条请求连发两次，likes 会 +1 再 -1 回到原值；若返回常数，这个数字不会动。
   const c = await likesRepository.countLikes(workId);
-  if (!c.ok) return fail(500, 'INTERNAL_ERROR', c.message);
+  if (!c.ok) return answerFailure(c);
 
   const totalLikes = c.count;
 
@@ -240,4 +293,4 @@ exports.main = async function (event, context) {
       liked: liked,
     },
   });
-};
+}

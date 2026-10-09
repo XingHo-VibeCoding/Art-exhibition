@@ -326,6 +326,86 @@
   .write-out .t-bad{color:var(--bad)}
   .write-out .t-run{color:var(--accent)}
   .write-out .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--ink-2);word-break:break-all}
+
+  /* ---------- 输入框（面板 04 用） ---------- */
+  .input{
+    appearance:none;
+    background:rgba(0,0,0,.28);
+    border:1px solid rgba(240,238,230,.18);
+    color:var(--ink);
+    padding:9px 12px;
+    font-size:12.5px;
+    font-family:inherit;
+    letter-spacing:.02em;
+    width:100%;
+  }
+  .input:focus{outline:none;border-color:var(--accent)}
+  .input::placeholder{color:var(--ink-faint);letter-spacing:.04em}
+  .counter{
+    font-size:10.5px;letter-spacing:.08em;color:var(--ink-faint);
+    font-variant-numeric:tabular-nums;align-self:flex-end;padding-bottom:2px;
+  }
+  .counter.over{color:var(--bad)}
+
+  /* ---------- 感想列表（面板 04 用） ---------- */
+  .note-list{
+    margin-top:18px;
+    display:flex;flex-direction:column;gap:1px;
+    background:rgba(240,238,230,.10);   /* 1px 间隙 + 底色 = 发丝分隔线 */
+  }
+  .note-row{background:var(--wall);padding:13px 15px;display:flex;flex-direction:column;gap:9px}
+  /* 空列表 / 读取失败的提示行。**刻意不叫 note-row** ——
+     它不是一条记录，混用会让「列表里有几条」的核对永远多出 1 行。 */
+  .note-empty{
+    background:var(--wall);padding:16px 15px;
+    color:var(--ink-faint);font-size:12.5px;letter-spacing:.02em;
+  }
+  .note-meta{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .note-idx{font-size:10.5px;color:var(--accent);letter-spacing:.16em;font-variant-numeric:tabular-nums}
+  .note-id{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;color:var(--ink-2);word-break:break-all}
+  .note-time{font-size:10.5px;letter-spacing:.08em;color:var(--ink-faint);font-variant-numeric:tabular-nums;margin-left:auto}
+  .note-body{display:flex;align-items:flex-start;gap:16px}
+  .note-text{flex:1;min-width:0;font-size:13px;line-height:1.62;color:var(--ink);word-break:break-word}
+  .note-actions{flex:none;display:flex;gap:8px}
+
+  .btn-sm{padding:6px 13px;font-size:10px;letter-spacing:.12em}
+  .btn-ghost{background:transparent;color:var(--ink-2);border:1px solid rgba(240,238,230,.24)}
+  .btn-ghost:hover{opacity:1;border-color:var(--ink-2);color:var(--ink)}
+  .btn-danger{background:transparent;color:var(--bad);border:1px solid rgba(200,106,89,.52)}
+  .btn-danger:hover{opacity:1;background:rgba(200,106,89,.14)}
+
+  /* ---------- 二次确认弹层（删除的唯一闸门） ----------
+     为什么要有它：DELETE 是**不可逆**的。新增错了是多一条垃圾，
+     删除错了是少一份再也造不出来的东西 —— 所以只在这里加一道闸。 */
+  .mask{
+    position:fixed;inset:0;z-index:60;
+    background:rgba(9,13,14,.74);
+    display:flex;align-items:center;justify-content:center;
+    padding:24px;
+  }
+  .mask[hidden]{display:none}
+  .modal{
+    background:var(--wall);
+    border:1px solid rgba(240,238,230,.2);
+    border-top:2px solid var(--bad);
+    max-width:540px;width:100%;
+    padding:clamp(20px,3vw,30px);
+  }
+  .modal .kicker{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--bad)}
+  .modal h3{margin-top:12px;font-size:clamp(17px,2.4vw,22px);letter-spacing:-.01em;font-weight:700}
+  .modal .quote{
+    margin-top:16px;padding:12px 14px;
+    background:rgba(0,0,0,.24);
+    border-left:2px solid var(--accent);
+    font-size:12.5px;line-height:1.65;color:var(--ink-soft);
+    word-break:break-word;
+  }
+  .modal .quote .id{
+    display:block;margin-top:7px;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;color:var(--ink-faint);
+  }
+  .modal .warn{margin-top:14px;font-size:11.5px;line-height:1.7;color:var(--ink-faint);letter-spacing:.02em}
+  .modal .acts{margin-top:20px;display:flex;gap:10px;justify-content:flex-end}
 </style>
 </head>
 <body>
@@ -404,6 +484,39 @@
         </div>
       </div>
 
+      <!-- ④ 感想闭环：增 · 查 · 改 · 删 -->
+      <div class="panel" id="panelNote">
+        <div class="panel-tag">
+          <h2>Notes — full cycle</h2>
+          <span class="no">04</span>
+        </div>
+
+        <!-- 增 -->
+        <div class="write-row">
+          <div class="field">
+            <label for="noteWorkSel">Target work</label>
+            <select id="noteWorkSel">
+              <option value="">Loading works…</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1;min-width:min(260px,80vw)">
+            <label for="noteText">New note · max 50 characters</label>
+            <input class="input" id="noteText" maxlength="80" placeholder="一句话感想…" autocomplete="off">
+          </div>
+          <span class="counter" id="noteCount">0 / 50</span>
+          <button class="btn" id="noteAddBtn" disabled>Add note</button>
+        </div>
+
+        <!-- 查（列表）/ 改（就地编辑）/ 删（走确认弹层） -->
+        <div class="note-list" id="noteList"></div>
+
+        <div class="write-out" id="noteOut">
+          Pick a work, then <b>ADD NOTE</b> to write a row into the
+          <span class="mono">notes</span> table. Every action reports its before/after
+          values here — that is the whole point of this panel.
+        </div>
+      </div>
+
     </section>
 
     <footer class="foot">
@@ -412,6 +525,33 @@
     </footer>
 
   </main>
+
+  <!-- ==========================================================================
+       二次确认弹层（全局唯一）
+       --------------------------------------------------------------------------
+       ★ 这是「删除」的**唯一入口**。页面上没有第二条路径能直接发出 DELETE，
+         所有删除都必须先穿过这里 —— 一次点击不构成删除，两次才是。
+       默认焦点落在 CANCEL 上，Esc 与点遮罩都算「取消」——
+         **不确认就是取消**，这个默认值必须是安全的那一个。
+       ======================================================================= -->
+  <div class="mask" id="confirmMask" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+      <div class="kicker">Irreversible action</div>
+      <h3 id="confirmTitle">Delete this note?</h3>
+
+      <div class="quote" id="confirmBody">—</div>
+
+      <p class="warn">
+        This deletes the row from PostgreSQL for real. The list will no longer return it.
+        The response carries a copy of what was removed, but there is no undo button on this page.
+      </p>
+
+      <div class="acts">
+        <button class="btn btn-sm btn-ghost" id="confirmCancel">Cancel</button>
+        <button class="btn btn-sm btn-danger" id="confirmOk">Yes, delete</button>
+      </div>
+    </div>
+  </div>
 
 <script>
 /* ==========================================================================
@@ -430,12 +570,15 @@
 var API_BASE = 'https://art-exhibition-d7ggtul83d566a6c9.service.tcloudbase.com';
 
 /* 接口路径清单（与契约 §4 的路径一一对应）。
-   今天只用到 health / works / like 三个；stats / note / notes 尚未上线，
-   故此处暂不登记，等它们实现后再补。 */
+   health / works / like 是 Day 17–20 上线的；
+   note 于 Day 22 上线 —— **一条路径、四个方法**：GET 读列表 / POST 新增 /
+   PATCH 改正文 / DELETE 删一条（契约 §4.4–§4.7）。
+   stats 仍未实装，故此处不登记。 */
 var API = {
   health: API_BASE + '/api/health',
   works:  API_BASE + '/api/works',
-  like:   API_BASE + '/api/like'
+  like:   API_BASE + '/api/like',
+  note:   API_BASE + '/api/note'
 };
 
 console.log('[checkup] API_BASE =', API_BASE);
@@ -451,6 +594,39 @@ console.log('[checkup] endpoints =', API);
    为什么要统一：三个面板都要「发请求 + 判成败 + 记耗时」，
    写一遍共用，避免每个面板各抄一套（这正是 Day 19 学到的教训）。
    ======================================================================== */
+/* --------------------------------------------------------------------------
+   两处「裸报错」的翻译器（★ Day 23）
+
+   裸报错长什么样：浏览器抛出的 e.message 一律是英文
+     —— Failed to fetch ／ NetworkError when attempting to fetch resource.
+     拼进提示就成了「网络请求失败：Failed to fetch」，后半截没人读得懂。
+   契约 §3.2 要求 message **给人读**，所以前端这一层也要自己翻，
+     不能指望后端 —— 因为**请求根本没发出去**时，后端压根不知情。
+   -------------------------------------------------------------------------- */
+
+/** fetch 抛异常时：把浏览器的英文翻成人话，并说清「该怎么办」 */
+function explainFetchError(e){
+  var m = String((e && e.message) || '');
+  /* 超时 / 主动中断 —— 与「网断了」是两件事：前者重试有用，后者要去查网络 */
+  if (/abort|timeout|timed out/i.test(m)) return '请求超时了，请稍后再试一次';
+  /* 断网、DNS 失败、跨域被拦 —— 浏览器把这三种都报成 Failed to fetch，无法细分 */
+  if (/Failed to fetch|NetworkError|Load failed|network/i.test(m)) {
+    return '网络好像断开了，请检查网络连接后再试一次';
+  }
+  return '网络请求失败，请检查网络后再试一次';
+}
+
+/** 拿到了 HTTP 响应、但响应体不是契约形状时的兜底（例如平台级 404 INVALID_PATH） */
+function explainHttpStatus(s){
+  if (s === 404) return '接口地址不存在（HTTP 404），可能是路径还没配好';
+  if (s === 403) return '没有访问权限（HTTP 403）';
+  if (s === 405) return '请求方式不被支持（HTTP 405）';
+  if (s === 503) return '服务暂时不可用（HTTP 503），请稍后再试';
+  if (s >= 500) return '服务端出了点问题（HTTP ' + s + '），请稍后再试';
+  if (s >= 400) return '请求不正确（HTTP ' + s + '），请检查后重试';
+  return '请求失败（HTTP ' + s + '）';
+}
+
 async function fetchJSON(url, options){
   var t0 = performance.now();
   try{
@@ -463,16 +639,16 @@ async function fetchJSON(url, options){
     if (res.status >= 200 && res.status < 300 && body && body.ok === true){
       return { ok:true, status:res.status, data:body, ms:ms, error:null };
     }
-    /* 失败：优先用契约 §3.2 的中文 message */
+    /* 失败：优先用契约 §3.2 的中文 message；拿不到就按状态码翻成中文 */
     var msg = (body && body.error && body.error.message)
            || (body && body.message)
-           || ('HTTP ' + res.status);
+           || explainHttpStatus(res.status);
     return { ok:false, status:res.status, data:body, ms:ms, error:msg };
 
   }catch(e){
     var ms2 = Math.round(performance.now() - t0);
     /* 走到这里通常是：断网、DNS 失败、或跨域被浏览器拦下（CORS） */
-    return { ok:false, status:0, data:null, ms:ms2, error:'网络请求失败：' + e.message };
+    return { ok:false, status:0, data:null, ms:ms2, error:explainFetchError(e) };
   }
 }
 
@@ -651,12 +827,456 @@ function mountWriteTest(works){
   });
 }
 
-/* 板块②-4：三个面板全部接上。
-   loadWorks 拿到作品后，把列表交给写入面板填下拉框。 */
+/* --------------------------------------------------------------------------
+   面板 04 · 感想闭环（增 · 查 · 改 · 删）
+   --------------------------------------------------------------------------
+   契约依据：
+     §4.4 POST   /api/note             → data.note
+     §4.5 GET    /api/note?workId=…    → data.notes[] + data.total
+     §4.6 PATCH  /api/note/:id         → data.note + data.previous.text
+     §4.7 DELETE /api/note/:id         → data.deleted + data.snapshot
+   本面板是全站唯一演示「四类操作闭环」的地方 —— 前三周只有「读 + 写」，
+   今天补上「改 + 删」，闭环才成立。
+   -------------------------------------------------------------------------- */
+
+/* 正文上限，与云函数 MAX_TEXT_CHARS 保持一致（契约 §4.4）。 */
+var NOTE_MAX = 50;
+
+/* ★ 计数口径必须与云函数一致。
+   后端 countChars = Array.from(s).length —— 按「码点」数，emoji 算 1 个。
+   若这里偷懒用 .length，一个 '👍' 会被算成 2 → 前端喊超了、后端说没超，
+   两边各说各话。契约 §4.4 明写「emoji 按 1 个计」，此处必须对齐。 */
+function countChars(s){
+  return Array.from(String(s)).length;
+}
+
+/* 文本进 innerHTML 前先转义。
+   感想正文来自数据库（用户输入），直接拼进去会把 '<' 当成标签解析 ——
+   轻则显示错乱，重则形成注入面。凡「数据 → HTML」一律先过这道。 */
+function esc(s){
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/* 带 PATCH / DELETE 的取数封装（面板 04 用）。
+   fetchJSON 只封装了「发一次请求 + 判成败」，方法与非 GET 的 body 仍要各调用点自己传。
+   把 PATCH 与 DELETE 各收成一个小函数，面板里的调用点就只剩语义、不再重复样板。
+   （统一形状的错误处理由 fetchJSON 负责 —— 这里不重造。） */
+function patchJSON(url, payload){
+  return fetchJSON(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  });
+}
+function deleteJSON(url){
+  return fetchJSON(url, { method: 'DELETE' });
+}
+
+/* 毫秒时间戳 → 「2026-10-08 12:34:56」 */
+function fmtTime(ts){
+  var d = new Date(ts);
+  function p(n){ return String(n).padStart(2, '0'); }
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' +
+         p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+}
+
+/* ==========================================================================
+   ★★ 二次确认弹层（删除的唯一闸门）★★
+   --------------------------------------------------------------------------
+   「删除为什么比新增更容易出事？」—— 因为新增错了是多一条垃圾，
+   删除错了是少一份再也造不出来的东西。所以本页的纪律是：
+     页面上**没有第二条路径**能直接发出 DELETE，所有删除都必须先穿过这里。
+   一道闸由三件事共同构成，缺一不可：
+     ① 弹层先弹（一次点击不构成删除，两次才是）；
+     ② 默认焦点落在 Cancel 上（**不确认就是取消** —— 默认值必须是安全那个）；
+     ③ Esc 键、点遮罩、点 Cancel 三者都算取消（慌乱时随便按都是安全方向）。
+   ======================================================================= */
+var __confirmCb = null;
+
+function openConfirm(title, bodyHTML, onYes){
+  var mask = document.getElementById('confirmMask');
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmBody').innerHTML = bodyHTML;
+  __confirmCb = onYes;
+  mask.hidden = false;
+  /* 默认焦点给 CANCEL —— 回车/空格误触时，落点是最安全的按钮。 */
+  document.getElementById('confirmCancel').focus();
+}
+
+function closeConfirm(){
+  document.getElementById('confirmMask').hidden = true;
+  __confirmCb = null;
+}
+
+/* 弹层自身的接线只做一次（全局唯一实例）。 */
+(function wireConfirm(){
+  var mask = document.getElementById('confirmMask');
+
+  document.getElementById('confirmCancel').addEventListener('click', closeConfirm);
+
+  document.getElementById('confirmOk').addEventListener('click', function(){
+    var cb = __confirmCb;
+    closeConfirm();
+    if (cb) cb();
+  });
+
+  /* 点遮罩 = 取消（点在弹层本体上不算） */
+  mask.addEventListener('click', function(e){
+    if (e.target === mask) closeConfirm();
+  });
+
+  /* Esc = 取消。**没有**「Esc = 确认」这种设计。 */
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape' && !mask.hidden) closeConfirm();
+  });
+})();
+
+/* --------------------------------------------------------------------------
+   面板 04 主逻辑
+   -------------------------------------------------------------------------- */
+function mountNotePanel(works){
+  var sel    = document.getElementById('noteWorkSel');
+  var input  = document.getElementById('noteText');
+  var count  = document.getElementById('noteCount');
+  var addBtn = document.getElementById('noteAddBtn');
+  var listEl = document.getElementById('noteList');
+  var out    = document.getElementById('noteOut');
+
+  var current   = [];   /* 当前 workId 下的感想（本地副本，用于渲染） */
+  var editingId = null; /* 正在就地编辑哪一条；null = 无 */
+
+  /* --- 输出区小工具 --- */
+  function say(tagText, tagClass, html){
+    out.innerHTML = '<span class="tag ' + tagClass + '">' + tagText + '</span>' + html;
+  }
+  function sayRun(msg){
+    say('…', 't-run', esc(msg));
+  }
+
+  /* --- 字符计数（与后端同口径） --- */
+  function syncCount(){
+    var n = countChars(input.value.trim());
+    count.textContent = n + ' / ' + NOTE_MAX;
+    count.className = 'counter' + (n > NOTE_MAX ? ' over' : '');
+  }
+
+  /* --- 填作品下拉框（顺序 = 接口的 order 升序） --- */
+  sel.innerHTML = '';
+  works.forEach(function(w){
+    var o = document.createElement('option');
+    o.value = w._id;
+    o.textContent = w.name + '  ·  ' + w._id;
+    sel.appendChild(o);
+  });
+  addBtn.disabled = works.length === 0;
+
+  /* --- 查：GET 列表 --- */
+  async function load(quiet){
+    var workId = sel.value;
+    current = [];
+    if (!workId) return null;
+
+    var url = API.note + '?workId=' + encodeURIComponent(workId) + '&limit=50';
+    var r = await fetchJSON(url);
+
+    if (!r.ok){
+      listEl.innerHTML = '';
+      var p = document.createElement('div');
+      p.className = 'note-empty';
+      p.style.color = 'var(--bad)';
+      p.textContent = 'Could not read notes: ' + (r.error || '未知错误');
+      listEl.appendChild(p);
+      if (!quiet) say('GET ' + (r.status || 'ERR'), 't-bad', esc(r.error || '未知错误'));
+      return r;
+    }
+
+    current = (r.data.data.notes || []).slice();
+    if (!quiet){
+      say('GET 200', 't-ok',
+        'notes = <b>' + current.length + '</b> ｜ total = <b>' + r.data.data.total + '</b>' +
+        ' ｜ ' + r.ms + ' ms');
+    }
+    render();
+    return r;
+  }
+
+  /* --- 渲染列表 --- */
+  function render(){
+    listEl.innerHTML = '';
+
+    if (!current.length){
+      /* 空列表给一句说明，而不是「一片空白」——
+         空白会让人分不清「真的没有感想」还是「页面坏了」。
+         ★ 用独立类名 note-empty（不是 note-row）：它**不是一条记录**。
+         混用会让「数一数列表里有几条」这种核对（页面/DOM/验收脚本都要数）
+         永远多出 1 行。语义先分清，计数才不会骗人。 */
+      var empty = document.createElement('div');
+      empty.className = 'note-empty';
+      empty.textContent = 'No notes for this work yet — press ADD NOTE to create the first one.';
+      listEl.appendChild(empty);
+      return;
+    }
+
+    current.forEach(function(n, i){
+      listEl.appendChild(buildRow(n, i, editingId === n._id));
+    });
+  }
+
+  /* --- 造一行：常态 / 就地编辑两种形态 --- */
+  function buildRow(n, i, editing){
+    var row = document.createElement('div');
+    row.className = 'note-row';
+
+    /* 元信息行：序号 · _id · 时间 */
+    var meta = document.createElement('div');
+    meta.className = 'note-meta';
+    var ix = document.createElement('span');
+    ix.className = 'note-idx';
+    ix.textContent = String(i + 1).padStart(2, '0');
+    var idEl = document.createElement('span');
+    idEl.className = 'note-id';
+    idEl.textContent = n._id;
+    var tm = document.createElement('span');
+    tm.className = 'note-time';
+    tm.textContent = fmtTime(n.createdAt);
+    meta.appendChild(ix); meta.appendChild(idEl); meta.appendChild(tm);
+
+    /* 正文 + 动作区 */
+    var body = document.createElement('div');
+    body.className = 'note-body';
+    var acts = document.createElement('div');
+    acts.className = 'note-actions';
+
+    if (editing){
+      var inp = document.createElement('input');
+      inp.className = 'input';
+      inp.type = 'text';
+      inp.value = n.text;
+      inp.maxLength = 200;   /* 留出余量，好让「超 50」这件事在计数器里看得见 */
+
+      var save = document.createElement('button');
+      save.className = 'btn btn-sm';
+      save.textContent = 'Save';
+      var cancel = document.createElement('button');
+      cancel.className = 'btn btn-sm btn-ghost';
+      cancel.textContent = 'Cancel';
+
+      body.appendChild(inp);
+      acts.appendChild(save); acts.appendChild(cancel);
+      body.appendChild(acts);
+
+      save.addEventListener('click', function(){ commitEdit(n, inp.value); });
+      cancel.addEventListener('click', function(){
+        editingId = null;
+        render();
+        sayRun('Edit cancelled — nothing was sent to the database.');
+      });
+      inp.addEventListener('keydown', function(e){
+        if (e.key === 'Enter')  commitEdit(n, inp.value);
+        if (e.key === 'Escape'){ editingId = null; render(); }
+      });
+      setTimeout(function(){ inp.focus(); inp.select(); }, 0);
+
+    } else {
+      var tx = document.createElement('div');
+      tx.className = 'note-text';
+      tx.textContent = n.text;
+
+      var edit = document.createElement('button');
+      edit.className = 'btn btn-sm btn-ghost';
+      edit.textContent = 'Edit';
+      var del = document.createElement('button');
+      del.className = 'btn btn-sm btn-danger';
+      del.textContent = 'Delete';
+
+      body.appendChild(tx);
+      acts.appendChild(edit); acts.appendChild(del);
+      body.appendChild(acts);
+
+      edit.addEventListener('click', function(){ editingId = n._id; render(); });
+      del.addEventListener('click',  function(){ askDelete(n); });
+    }
+
+    row.appendChild(meta);
+    row.appendChild(body);
+    return row;
+  }
+
+  /* --- 改：PATCH 一条（只改 text） --- */
+  async function commitEdit(n, raw){
+    var next   = String(raw).trim();
+    var nChars = countChars(next);
+
+    /* 三道前端预检。目的不是「替代后端」，而是「省一次无谓的往返 + 说得更清楚」——
+       后端一样会拦，前端拦是为了让人少等一次网络。 */
+    if (nChars === 0){
+      say('PATCH 400', 't-bad', 'The note cannot be empty — the server refuses it. Nothing was sent.');
+      return;
+    }
+    if (nChars > NOTE_MAX){
+      say('PATCH 413', 't-bad',
+        'Too long: ' + nChars + ' / ' + NOTE_MAX + ' characters. Nothing was sent.');
+      return;
+    }
+    if (next === n.text){
+      editingId = null;
+      render();
+      sayRun('Value unchanged — no request was sent. PATCH is for changing something.');
+      return;
+    }
+
+    var before = n.text;
+    sayRun('PATCH /api/note/' + n._id + ' …');
+
+    var r = await patchJSON(API.note + '/' + encodeURIComponent(n._id), { text: next });
+    editingId = null;
+
+    if (r.ok){
+      var d = r.data.data;
+      /* ★ 改完立刻重新 GET 一次 —— 「刷新仍在」才是「改的是真数据」的证据。
+         只信 PATCH 的响应不够，那可能只是服务端回吐了它以为的值。 */
+      await load(true);
+      say('PATCH 200', 't-ok',
+        'id <span class="mono">' + esc(n._id) + '</span><br>' +
+        'before = “<span style="color:var(--ink-faint)">' + esc(d.previous.text) + '</span>”<br>' +
+        'after&nbsp;&nbsp;= “<b>' + esc(d.note.text) + '</b>”<br>' +
+        '<span style="color:var(--ink-faint);font-size:11px">' +
+        'The list above was re-read from the database after the update — the new value is what the server now returns.</span>');
+
+    } else if (r.status === 404){
+      /* 极端并发：查到了、但在改之前被别人删了 → 404，且绝不回「改成功」。 */
+      await load(true);
+      say('PATCH 404', 't-bad',
+        esc(r.error || '感想不存在') +
+        '<br><span style="color:var(--ink-faint);font-size:11px">' +
+        'The row was not touched. The list has been refreshed.</span>');
+
+    } else {
+      render();
+      say('PATCH ' + (r.status || 'ERR'), 't-bad',
+        esc(r.error || '未知错误') +
+        '<br><span style="color:var(--ink-faint);font-size:11px">' +
+        'No change was written to the database.</span>');
+    }
+  }
+
+  /* --- 删：先过弹层（唯一入口），确认后才真的发 DELETE --- */
+  function askDelete(n){
+    var preview = n.text.length > 110 ? n.text.slice(0, 110) + '…' : n.text;
+    openConfirm(
+      'Delete this note?',
+      '“' + esc(preview) + '”' +
+        '<span class="id">' + esc(n._id) + ' · ' + fmtTime(n.createdAt) + '</span>',
+      function(){ doDelete(n); }   /* ← 只有点下 YES, DELETE 才会执行到这里 */
+    );
+  }
+
+  async function doDelete(n){
+    sayRun('DELETE /api/note/' + n._id + ' …');
+
+    var r = await deleteJSON(API.note + '/' + encodeURIComponent(n._id));
+
+    if (r.ok){
+      var snap = (r.data.data && r.data.data.snapshot) || {};
+      await load(true);   /* 重新 GET —— 「GET 不再返回」就是删除生效的证据 */
+      say('DELETE 200', 't-bad',
+        'id <span class="mono">' + esc(n._id) + '</span> — it is gone from the list above.<br>' +
+        'snapshot (what was removed) = “<b>' + esc(snap.text) + '</b>”<br>' +
+        '<span style="color:var(--ink-faint);font-size:11px">' +
+        'Now run <span class="mono">select * from notes where "_id" = \'' + esc(n._id) + '\'</span> ' +
+        'in the console — it returns zero rows. Both ends agree, so it was a real delete.</span>');
+
+    } else if (r.status === 404){
+      await load(true);
+      say('DELETE 404', 't-bad',
+        esc(r.error || '感想不存在') +
+        '<br><span style="color:var(--ink-faint);font-size:11px">' +
+        'Nothing was deleted — and the server did NOT pretend it succeeded.</span>');
+
+    } else {
+      say('DELETE ' + (r.status || 'ERR'), 't-bad',
+        esc(r.error || '未知错误') +
+        '<br><span style="color:var(--ink-faint);font-size:11px">' +
+        'Nothing was deleted.</span>');
+    }
+  }
+
+  /* --- 增：POST 一条 --- */
+  async function addNote(){
+    var workId = sel.value;
+    var text   = input.value.trim();
+    var nChars = countChars(text);
+
+    if (!workId){ say('POST 400', 't-bad', 'Pick a work first.'); return; }
+    if (nChars === 0){
+      say('POST 400', 't-bad', 'Write something first — an empty note is refused by the server.');
+      return;
+    }
+    if (nChars > NOTE_MAX){
+      say('POST 413', 't-bad', 'Too long: ' + nChars + ' / ' + NOTE_MAX + '. Nothing was sent.');
+      return;
+    }
+
+    addBtn.disabled = true;
+    sayRun('POST /api/note …');
+
+    var r = await postJSON(API.note, { workId: workId, visitorId: TEST_VISITOR, text: text });
+
+    if (r.ok){
+      var note = r.data.data.note;
+      input.value = '';
+      syncCount();
+      await load(true);
+      say('POST 200', 't-ok',
+        'new id <span class="mono">' + esc(note._id) + '</span><br>' +
+        'text = “<b>' + esc(note.text) + '</b>”<br>' +
+        '<span style="color:var(--ink-faint);font-size:11px">' +
+        'It shows in the list above, and that list came from a fresh GET — the row is really in PostgreSQL.</span>');
+
+    } else if (r.status === 409){
+      /* ★ 这一条是「防呆」在新增方向的体现：同一访客对同一作品只能留一句
+         （表上有 workId + visitorId 联合唯一索引）。接口如实回 409 + 中文说明，
+         而不是崩一个 500，也不是静默塞进去两条。 */
+      say('POST 409', 't-bad',
+        esc(r.error || '重复提交') +
+        '<br><span style="color:var(--ink-faint);font-size:11px">' +
+        'The test visitor already left a note for this work. Use <b>Edit</b> to change it, or <b>Delete</b> to remove it first.</span>');
+
+    } else {
+      say('POST ' + (r.status || 'ERR'), 't-bad',
+        esc(r.error || '未知错误') +
+        '<br><span style="color:var(--ink-faint);font-size:11px">' +
+        'No change was written to the database.</span>');
+    }
+
+    addBtn.disabled = false;
+  }
+
+  /* --- 接线 --- */
+  input.addEventListener('input', syncCount);
+  input.addEventListener('keydown', function(e){ if (e.key === 'Enter') addNote(); });
+  addBtn.addEventListener('click', addNote);
+  sel.addEventListener('change', function(){
+    editingId = null;
+    load(false);
+  });
+
+  syncCount();
+  load(false);
+}
+
+/* 板块②-4：四个面板全部接上。
+   loadWorks 拿到作品后，交给面板 03（点赞）与面板 04（感想闭环）填下拉框。 */
 loadHealth();
 loadWorks().then(function(r){
   if (r && r.ok && r.data && r.data.data){
-    mountWriteTest(r.data.data.works || []);
+    var ws = r.data.data.works || [];
+    mountWriteTest(ws);
+    mountNotePanel(ws);
   }
 });
 </script>
