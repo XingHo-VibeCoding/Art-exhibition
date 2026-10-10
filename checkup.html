@@ -1206,7 +1206,19 @@ function mountNotePanel(works){
   }
 
   /* --- 增：POST 一条 --- */
+
+  /* ★ Day 24 修复：把「在飞」闸门从按钮的 disabled 属性，挪到这段流程本身。
+     为什么挪：disabled 是浏览器替按钮做的事，它只挡得住**鼠标点击**；
+     而 `input` 上的回车处理器是**自己**调 addNote 的，它从不看按钮的那个属性。
+     于是同一个「提交」动作有了两道准入路径，而闸门只堵了其中一道 ——
+     表现为：点一下按钮后按钮立刻变灰，再连按回车，请求照样一串一串地发出去。
+     把开关放在函数头上，鼠标与键盘就都只能从同一道门进来了。 */
+  var addBusy = false;
+
   async function addNote(){
+    /* 闸门：**任何一个入口**都从这里过 */
+    if (addBusy) return;
+
     var workId = sel.value;
     var text   = input.value.trim();
     var nChars = countChars(text);
@@ -1221,39 +1233,45 @@ function mountNotePanel(works){
       return;
     }
 
+    addBusy = true;
     addBtn.disabled = true;
     sayRun('POST /api/note …');
 
-    var r = await postJSON(API.note, { workId: workId, visitorId: TEST_VISITOR, text: text });
+    try {
+      var r = await postJSON(API.note, { workId: workId, visitorId: TEST_VISITOR, text: text });
 
-    if (r.ok){
-      var note = r.data.data.note;
-      input.value = '';
-      syncCount();
-      await load(true);
-      say('POST 200', 't-ok',
-        'new id <span class="mono">' + esc(note._id) + '</span><br>' +
-        'text = “<b>' + esc(note.text) + '</b>”<br>' +
-        '<span style="color:var(--ink-faint);font-size:11px">' +
-        'It shows in the list above, and that list came from a fresh GET — the row is really in PostgreSQL.</span>');
+      if (r.ok){
+        var note = r.data.data.note;
+        input.value = '';
+        syncCount();
+        await load(true);
+        say('POST 200', 't-ok',
+          'new id <span class="mono">' + esc(note._id) + '</span><br>' +
+          'text = “<b>' + esc(note.text) + '</b>”<br>' +
+          '<span style="color:var(--ink-faint);font-size:11px">' +
+          'It shows in the list above, and that list came from a fresh GET — the row is really in PostgreSQL.</span>');
 
-    } else if (r.status === 409){
-      /* ★ 这一条是「防呆」在新增方向的体现：同一访客对同一作品只能留一句
-         （表上有 workId + visitorId 联合唯一索引）。接口如实回 409 + 中文说明，
-         而不是崩一个 500，也不是静默塞进去两条。 */
-      say('POST 409', 't-bad',
-        esc(r.error || '重复提交') +
-        '<br><span style="color:var(--ink-faint);font-size:11px">' +
-        'The test visitor already left a note for this work. Use <b>Edit</b> to change it, or <b>Delete</b> to remove it first.</span>');
+      } else if (r.status === 409){
+        /* ★ 这一条是「防呆」在新增方向的体现：同一访客对同一作品只能留一句
+           （表上有 workId + visitorId 联合唯一索引）。接口如实回 409 + 中文说明，
+           而不是崩一个 500，也不是静默塞进去两条。 */
+        say('POST 409', 't-bad',
+          esc(r.error || '重复提交') +
+          '<br><span style="color:var(--ink-faint);font-size:11px">' +
+          'The test visitor already left a note for this work. Use <b>Edit</b> to change it, or <b>Delete</b> to remove it first.</span>');
 
-    } else {
-      say('POST ' + (r.status || 'ERR'), 't-bad',
-        esc(r.error || '未知错误') +
-        '<br><span style="color:var(--ink-faint);font-size:11px">' +
-        'No change was written to the database.</span>');
+      } else {
+        say('POST ' + (r.status || 'ERR'), 't-bad',
+          esc(r.error || '未知错误') +
+          '<br><span style="color:var(--ink-faint);font-size:11px">' +
+          'No change was written to the database.</span>');
+      }
+    } finally {
+      /* finally 而不是写在末尾：任何路径（含未来可能抛异常的路径）都要把闸门复位，
+         否则一次意外就会让按钮永久锁死 —— 那比漏几发请求糟得多。 */
+      addBusy = false;
+      addBtn.disabled = false;
     }
-
-    addBtn.disabled = false;
   }
 
   /* --- 接线 --- */
