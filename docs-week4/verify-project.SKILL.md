@@ -60,7 +60,7 @@ cd "C:/Users/Henry/Desktop/Vibe coding" && bash _ref/verify/refresh-git-snapshot
 | **B4** | `/api/like` toggle | 同 payload 连发两次：`liked` true→false 且 `likes` −1（净影响 0） | §4.2 toggle 语义 + 自清理 |
 | **B5** | `/api/note` 增删闭环 | POST 建 → GET 查得到 → DELETE 掉 → **再 GET 查不到**（净残留 0） | §4.7 零残留纪律 |
 | **C1** | 无硬编码密钥（工作区） | 扫 135 个跟踪文件，`sk-` / `Bearer sk-` / `CLOUDBASE_API_KEY=` 真实值 → **0 命中** | Day 23：`sk-` 三处命中已逐条证伪 |
-| **C2** | 无密钥进 Git 历史 | 全历史文本扫描 → 0 命中 | §八 v1.9：18 提交双向 0 命中 |
+| **C2** | 无密钥进 Git 历史 | **历史文本非空** 且 全历史扫描 → 0 命中（空扫描直接 FAIL，见元检查一节） | §八 v1.9：18 提交双向 0 命中 ｜ Day 25：坏 ref 导致空扫描假 PASS |
 | **D1** | `.gitignore` + `.env.example` | `.gitignore` 覆盖 `.env` 且存在 `cloud/.env.example` 且示例无真实值 且 `.env` 未被跟踪 | AGENTS.md 第五节 |
 | **D2** | Git 工作区干净 | `git status --porcelain` 输出为空 | 发布纪律 |
 
@@ -164,6 +164,49 @@ C1 / C2 支持一张**精确形状白名单**（`SECRET_WHITELIST`，定义在 `
 
 > 测试原则同 Day 23：**只测"该放过的放过了"不够，必须测"该抓的还抓得住"** ——
 > 前者证明白名单生效，后者证明**判据锐度没有降低**。
+
+---
+
+## ★★ 元检查：防止「扫描对象为空」造成的假 PASS（Day 25 真实踩坑）
+
+**这是今天最值钱的一条判据。**
+
+### 事故经过
+
+Day 25 收尾时，`refs/remotes/origin/main` 这个 git 引用文件里被写入了一个
+**7 位短 hash**（`26435ec`，正常应为 40 位）。git 的 ref 文件**必须存完整 hash**，
+于是：
+
+```
+git log -p --all  →  fatal: bad object refs/remotes/origin/main
+                  →  输出为空
+                  →  _history.txt 0 字节
+                  →  C2 扫描 0 字节 → **表面 PASS，实际什么都没查**
+```
+
+**这是最危险的一类失效**：它**不报错**，只是悄悄不再工作。
+如果只看报告，你会以为"C2 通过" —— 而它要么从没工作过，要么早已停摆。
+
+### 修法（两道防线）
+
+| 防线 | 位置 | 做法 |
+|---|---|---|
+| **上游拦截** | `refresh-git-snapshot.sh` | `git log -p --all` 失败时**显式报警**；历史文本 0 字节时打印警告 |
+| **下游判据** | `run-checks.js` 的 `checkC2()` | `historyScan.length === 0` → **直接判 FAIL**，并提示"常见原因 = git 引用损坏" |
+
+### 为什么不能只靠"命中 0 处 = PASS"
+
+> **「查了、没找到」与「根本没查」必须是两个结论。**
+> 前者是 PASS，后者是 FAIL。若二者都显示 PASS，这条检查就退化成了摆设。
+
+**证伪测试（Day 25 实测）**：把快照里 `historyScan` 置空 → C2 立刻 **FAIL** 并给出
+「⚠ 扫描对象为空（历史文本 0 字节）→ 无法证明查过任何东西 = 假 PASS」；
+恢复真实快照 → C2 回 PASS（811KB / 0 命中）。
+
+### 一般化（这条可以迁移到任何检查项）
+
+**凡是"扫描 / 遍历 / 统计"类的判据，都必须先断言「扫描对象非空」。**
+否则一旦上游数据源坏掉，检查会从 FAIL 静默退化成 PASS —— 而这比一直 FAIL 危险得多。
 
 ---
 
