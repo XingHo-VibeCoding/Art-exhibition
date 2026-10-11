@@ -61,3 +61,38 @@ npm run preview
 未完成：GSAP/Vite 迁移、统一动效系统、主题换版时间轴、根目录正式入口、最终性能验收。
 
 当前只有 `ARCANA` 有四张真实作品，其余主题是策展预留展位。
+
+## 六、发布前检查（verify-project）
+
+> 2026-10-11（Day 25）新增。第 3–4 周积累了云函数、数据库、静态托管三层，
+> 检查项多了人会忘。这一节把检查固化成一个可复用的 Skill。
+
+**一句话用法**：对 AI 说 **「运行 verify-project」**，它会逐项输出 PASS / FAIL 与证据。
+
+**手工命令**（等价，任何时候可自己跑）：
+
+```bash
+cd "<项目根目录>"
+bash _ref/verify/refresh-git-snapshot.sh                                  # 第 1 步：刷新 Git 快照
+"C:/Users/Henry/.workbuddy/binaries/node/versions/22.22.2-6/node.exe" _ref/verify/run-checks.js   # 第 2 步：跑检查
+```
+
+退出码：`0` = 全 PASS，`1` = 有 FAIL，`2` = 脚本自身异常。
+
+**覆盖 15 项检查**（检查项全部来自 Day 15–24 真实踩过的坑）：
+
+| 组 | 检查项 |
+|---|---|
+| A 公网与静态 | A1 首页可访问（带站内 Referer）· A1b 静态资源可达 · A2 首页渲染完整 · A3 前端部署一致（字节数比对） |
+| B 云函数接口 | B1 `/api/health` · B2 `/api/works`（85 条）· B3 `/api/note` 读 · B4 `/api/like` toggle · B5 `/api/note` 增删闭环 |
+| C 密钥安全 | C1 工作区无硬编码密钥 · C2 Git 历史无密钥 |
+| D Git 纪律 | D1 `.gitignore` + `.env.example` · D2 工作区干净 |
+| E 数据库 | E1 数据库可达（间接，经 `/api/works`） |
+| F 部署依赖 | F1 云函数三件套完整（`index.js` + `package.json` + `repository/`） |
+
+**Skill 正本**：`docs-week4/verify-project.SKILL.md`（入库）；
+运行时副本：`.workbuddy/skills/verify-project/SKILL.md`。
+
+> ⚠️ **本机环境铁律**：Node 的 `execFileSync` / `execSync` 包 `git` / `curl` 一律 **EBUSY**。
+> 故 git 查询走 Bash 脚本落盘，HTTP 请求用纯 Node `https` 模块 —— 脚本内不 spawn 任何子进程。
+
