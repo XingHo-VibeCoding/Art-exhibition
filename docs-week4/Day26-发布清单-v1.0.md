@@ -141,6 +141,19 @@ bash _ref/verify/refresh-git-snapshot.sh
 > ⚠️ 这一条本身是「探针说真话」的正面案例：**检查台抓到了发布者自己的工作区状态**。
 > 若把它悄悄跳过，就成了「只报好消息的检查」——那还不如没有。
 
+#### ★ 收尾复跑：15 PASS / 0 FAIL（发布检查正式通过）
+
+**运行时间**：2026-10-12 15:59:02 ｜ **原始输出**：`_ref/verify/out/day26-04-final-after-commit.txt`
+
+```
+合计 15 PASS / 0 FAIL ｜ 结论：✅ 通过发布检查   （退出码 0）
+```
+
+`D2` 转为 **PASS（无未提交改动）** —— 与上面 docstring 中的预判完全一致：**那个 FAIL 只是「文档尚未提交」，不是代码问题。**
+
+> 过程留三步原始输出，**刻意不同名、不覆盖**：
+> `day26-01-before-commit.txt`（14/1）→ `day26-03-after-rollback.txt`（回滚后 14/1）→ `day26-04-final-after-commit.txt`（15/0）。
+
 ---
 
 ## 三、发布方式与步骤
